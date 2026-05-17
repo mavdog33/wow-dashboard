@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Balashotcala — Hunter Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0f; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #3a2a0a; border-radius: 3px; }
+    .todo-row:hover { background: rgba(200,169,81,0.05) !important; }
+    .tab-btn:hover { color: #c8a951 !important; }
+    .cat-btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const LAST_UPDATED = "May 17, 2026";
+const SESSION_NOTE = "Epic flying purchased · Gold: 45g liquid + 3,242g AH incoming";
+
+const initialTodos = [
+  { id: 1,  category: "solo",       text: "Transfer 24g from alt to hunter",                                                                    done: false, priority: "high"   },
+  { id: 2,  category: "solo",       text: "Deadwind Pass → Archmage Alturus → start Kara attunement solo quests → Alterac → Cedric → Khadgar",  done: false, priority: "high"   },
+  { id: 3,  category: "solo",       text: "Azshara → Wavethrasher Hydras (0/6 scales) → Sunken Temple → kill Morphaz → Devilsaur Tooth",        done: false, priority: "high"   },
+  { id: 4,  category: "solo",       text: "Blade's Edge Mountains → Kaylaan's Signet quest chain (Deathblow to the Legion) — free BiS ring",    done: false, priority: "high"   },
+  { id: 5,  category: "solo",       text: "Max Two-Handed Axes to 350/350 on training dummy before equipping Mooncleaver",                      done: false, priority: "medium" },
+  { id: 6,  category: "solo",       text: "Turn in Orders from Lady Vashj in Shattrath",                                                        done: false, priority: "medium" },
+  { id: 7,  category: "crafting",   text: "Farm Felsteel Gloves recipe from Auchenai Crypts monks → BS to 375",                                 done: false, priority: "high"   },
+  { id: 8,  category: "crafting",   text: "Craft Mooncleaver (BS 375 + 4x Primal Nether from heroics + ~400-500g buyable mats)",                done: false, priority: "high"   },
+  { id: 9,  category: "crafting",   text: "Engineering to 375 (11 points needed) → Surestrike Goggles v2.0 + Turbo-Charged Flying Machine",     done: false, priority: "medium" },
+  { id: 10, category: "rep",        text: "Honor Hold → Revered (~9,000 rep) → buy Flamewrought Key → Heroic Shattered Halls",                  done: false, priority: "high"   },
+  { id: 11, category: "rep",        text: "Cenarion Expedition → Revered (~9,000 rep) → buy Reservoir Key → Heroic Steamvault/Slave Pens",      done: false, priority: "high"   },
+  { id: 12, category: "rep",        text: "Lower City → Revered (~9,000 rep) → buy Auchenai Key → Heroic Shadow Lab",                           done: false, priority: "high"   },
+  { id: 13, category: "rep",        text: "Sha'tar → Revered (~21,000 rep) → buy Warpforged Key → run normal Mechanar/Botanica to build rep",   done: false, priority: "high"   },
+  { id: 14, category: "rep",        text: "Keepers of Time → Revered (~21,000 rep) → buy Key of Time → Heroic Black Morass",                    done: false, priority: "high"   },
+  { id: 15, category: "rep",        text: "Kurenai → Honored (~3,000 rep) → Clefthoof Hide Quiver (turn in Obsidian Warbeads from Nagrand)",    done: false, priority: "medium" },
+  { id: 16, category: "rep",        text: "Consortium → Honored (~3,000 rep) → Smuggler's Ammo Pouch",                                          done: false, priority: "medium" },
+  { id: 17, category: "rep",        text: "Aldor → Revered (~9,000 rep) → Greater Inscription of Vengeance (BiS shoulder enchant)",             done: false, priority: "medium" },
+  { id: 18, category: "kara",       text: "Sethekk Halls normal → kill Talon King Ikiss → loot Shadow Lab Key",                                 done: false, priority: "high"   },
+  { id: 19, category: "kara",       text: "Shadow Labyrinth → First Key Fragment (must have Entry Into Karazhan quest active first!)",           done: false, priority: "high"   },
+  { id: 20, category: "kara",       text: "Steamvault → Second Key Fragment (in water before first boss — no full clear needed)",                done: false, priority: "high"   },
+  { id: 21, category: "kara",       text: "Arcatraz attunement chain → run Arcatraz → Third Key Fragment",                                      done: false, priority: "high"   },
+  { id: 22, category: "kara",       text: "Old Hillsbrad → Black Morass → Master's Key → 🎉 KARA ATTUNED!",                                     done: false, priority: "high"   },
+  { id: 23, category: "gear",       text: "Heroic Shattered Halls → Beast Lord Handguards (Kargath Bladefist, 16%) — locked until T5",          done: false, priority: "high"   },
+  { id: 24, category: "gear",       text: "Heroic Mechanar → Beast Lord Helm (Pathaleon, 16%) + Abacus of Violent Odds — same run",             done: false, priority: "high"   },
+  { id: 25, category: "gear",       text: "Heroic Steamvault → Beast Lord Mantle + Beast Lord Leggings + Wrathtide Longbow (Kalithresh)",       done: false, priority: "high"   },
+  { id: 26, category: "gear",       text: "Old Hillsbrad normal → Nightfall Wristguards (Epoch Hunter, 25%) — no heroic key needed",            done: false, priority: "medium" },
+  { id: 27, category: "gear",       text: "Heroic Slave Pens → Midnight Legguards (Quagmirran, 25%) — backup legs if BL Leggings slow to drop", done: false, priority: "medium" },
+  { id: 28, category: "badges",     text: "41 Badges of Justice → Bloodlust Brooch — highest priority BoJ spend, carries into P2",             done: false, priority: "high"   },
+  { id: 29, category: "badges",     text: "25 Badges of Justice → Choker of Vile Intent — carries through all of P1",                          done: false, priority: "high"   },
+  { id: 30, category: "postkara",   text: "Raid Karazhan weekly → Violet Eye to Honored → Nightbane attunement → Blackened Urn",               done: false, priority: "medium" },
+  { id: 31, category: "postkara",   text: "Kill Nightbane + Gruul → SSC progression unlocked",                                                  done: false, priority: "medium" },
+  { id: 32, category: "postkara",   text: "Cipher of Damnation + Trial of Naaru heroics + Magtheridon kill → TK progression",                  done: false, priority: "low"    },
+  { id: 33, category: "background", text: "Wintersaber Trainers Revered → Exalted (~25 cycles remaining) — podcast grind",                     done: false, priority: "low"    },
+  { id: 34, category: "background", text: "Cycle owl → cat through rep grinds to passively level pets to 70 (Ravager 69, Cat 66, Owl 64)",     done: false, priority: "low"    },
+  { id: 35, category: "alts",       text: "Level Shadow Priest 66 → 68 → choose Transmutation Master alchemy spec",                            done: false, priority: "low"    },
+  { id: 36, category: "alts",       text: "Use Druid JC 375 for daily gem cutting and AH income (casual income alt)",                          done: false, priority: "low"    },
+];
+
+const reps = [
+  { name: "Honor Hold",          current: "Honored",  goal: "Revered", gap: 9000,  color: "#4a90d9", pct: 55 },
+  { name: "Cenarion Expedition", current: "Honored",  goal: "Revered", gap: 9000,  color: "#5ba85a", pct: 55 },
+  { name: "Lower City",          current: "Honored",  goal: "Revered", gap: 9000,  color: "#c97a2a", pct: 55 },
+  { name: "The Aldor",           current: "Honored",  goal: "Revered", gap: 9000,  color: "#9b6fd4", pct: 55 },
+  { name: "The Sha'tar",         current: "Friendly", goal: "Revered", gap: 21000, color: "#4a90d9", pct: 20 },
+  { name: "Keepers of Time",     current: "Friendly", goal: "Revered", gap: 21000, color: "#c97a2a", pct: 20 },
+  { name: "Kurenai",             current: "Friendly", goal: "Honored", gap: 3000,  color: "#5ba85a", pct: 35 },
+  { name: "The Consortium",      current: "Friendly", goal: "Honored", gap: 3000,  color: "#9b6fd4", pct: 35 },
+  { name: "Wintersaber Trainers",current: "Revered",  goal: "Exalted", gap: 21000, color: "#c0c0c0", pct: 70 },
+];
+
+const gear = [
+  { slot: "Head",      item: "Dream-Wing Helm",              target: "Beast Lord Helm",                  status: "upgrade" },
+  { slot: "Neck",      item: "Pendant of Cunning",           target: "Choker of Vile Intent (25 BoJ)",   status: "upgrade" },
+  { slot: "Shoulders", item: "Consortium Mantle",            target: "Beast Lord Mantle",                status: "upgrade" },
+  { slot: "Back",      item: "Cloak of the Craft",           target: "Vengeance Wrap (BoE Tailoring)",   status: "upgrade" },
+  { slot: "Chest",     item: "Warden's Hauberk",             target: "Beast Lord Cuirass (low priority)", status: "upgrade" },
+  { slot: "Wrist",     item: "Spymistress's Wristguards",    target: "Nightfall Wristguards",            status: "upgrade" },
+  { slot: "Hands",     item: "Bloodstained Ravager Gauntlets", target: "Beast Lord Handguards",          status: "upgrade" },
+  { slot: "Waist",     item: "Marsh Survivalist's Belt",     target: "Dunewind Sash (H. Underbog)",      status: "upgrade" },
+  { slot: "Legs",      item: "Scaled Greaves of Patience",   target: "Beast Lord Leggings",              status: "upgrade" },
+  { slot: "Feet",      item: "Sky-Hunter Swift Boots",       target: "Boots of the Endless Hunt",        status: "upgrade" },
+  { slot: "Ring 1",    item: "Pathfinder's Band",            target: "Kaylaan's Signet (free quest!)",   status: "upgrade" },
+  { slot: "Ring 2",    item: "Ravenclaw Band",               target: "Keep — BiS non-Aldor option",     status: "good"    },
+  { slot: "Trinket 1", item: "Bladefist's Breadth",          target: "Bloodlust Brooch (41 BoJ)",        status: "upgrade" },
+  { slot: "Trinket 2", item: "Terokkar Tablet of Precision", target: "Abacus of Violent Odds (H. Mech)", status: "upgrade" },
+  { slot: "2H Weapon", item: "Terokk's Quill",               target: "Mooncleaver (craft — BS 375)",     status: "upgrade" },
+  { slot: "Ranged",    item: "Barreled Crossbow of the Bandit", target: "Wrathtide Longbow (H. Steamvault)", status: "upgrade" },
+];
+
+const questions = [
+  { id: 7,  q: "Arcatraz attunement started?",        a: "No — not in quest log",              resolved: true  },
+  { id: 8,  q: "Deathblow to the Legion started?",    a: "No — not in quest log",              resolved: true  },
+  { id: 13, q: "Alchemy spec preference for priest?", a: "Transmutation Master recommended",   resolved: true  },
+  { id: 15, q: "Level priest before or after Kara?",  a: "Unknown",                            resolved: false },
+];
+
+const categoryMeta = {
+  solo:       { label: "⚔️ Solo Tasks",        color: "#c8a951" },
+  crafting:   { label: "🔨 Crafting",           color: "#e07b39" },
+  rep:        { label: "🏆 Rep Grinds",         color: "#5ba85a" },
+  kara:       { label: "🏰 Kara Attunement",    color: "#9b6fd4" },
+  gear:       { label: "🎯 Beast Lord Farming", color: "#4a90d9" },
+  badges:     { label: "🏅 Badge Spending",     color: "#c0c0c0" },
+  postkara:   { label: "⚡ Post-Kara",          color: "#e05a5a" },
+  background: { label: "🌿 Background Grinds", color: "#7a9a7a" },
+  alts:       { label: "👥 Alts",              color: "#9a7a9a" },
+};
+
+const priorityStyle = {
+  high:   { bg: "rgba(224,91,91,0.2)",   color: "#e05a5a" },
+  medium: { bg: "rgba(200,169,81,0.2)",  color: "#c8a951" },
+  low:    { bg: "rgba(90,90,90,0.2)",    color: "#5a5a5a" },
+};
+
+function Dashboard() {
+  const [todos, setTodos] = useState(initialTodos);
+  const [activeTab, setActiveTab] = useState("todo");
+  const [expandedCats, setExpandedCats] = useState(Object.keys(categoryMeta));
+
+  const toggleTodo = (id) => setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  const toggleCat = (cat) => setExpandedCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+
+  const totalDone = todos.filter(t => t.done).length;
+  const pct = Math.round((totalDone / todos.length) * 100);
+
+  const grouped = Object.keys(categoryMeta).reduce((acc, cat) => {
+    acc[cat] = todos.filter(t => t.category === cat);
+    return acc;
+  }, {});
+
+  const S = {
+    page: {
+      minHeight: "100vh",
+      background: "linear-gradient(160deg, #0a0a0f 0%, #0f0e1a 40%, #0a0f0a 100%)",
+      fontFamily: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
+      color: "#d4b896",
+    },
+    header: {
+      background: "linear-gradient(180deg, #1a1208 0%, #0f0c05 70%, transparent 100%)",
+      borderBottom: "2px solid #5a4a1a",
+      padding: "20px 20px 16px",
+    },
+    headerTop: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
+    subLabel: { fontSize: 10, color: "#8a7a4a", letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 },
+    charName: {
+      fontSize: 26, fontWeight: "bold", letterSpacing: 2,
+      background: "linear-gradient(135deg, #f0c060 0%, #c8a030 50%, #f0c060 100%)",
+      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+    },
+    timestamp: { fontSize: 10, color: "#4a4a3a", marginTop: 6, letterSpacing: 1 },
+    stats: { display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" },
+    statCard: {
+      background: "rgba(255,255,255,0.03)", border: "1px solid #2a2010",
+      borderRadius: 6, padding: "7px 12px", minWidth: 90,
+    },
+    statLabel: { fontSize: 9, color: "#7a6a4a", textTransform: "uppercase", letterSpacing: 1 },
+    statSub: { fontSize: 9, color: "#5a5a4a", marginTop: 1 },
+    tabs: {
+      display: "flex", borderBottom: "1px solid #2a2010",
+      background: "rgba(0,0,0,0.3)", overflowX: "auto",
+    },
+    content: { padding: "16px 20px", maxWidth: 860 },
+    sectionLabel: { fontSize: 10, color: "#7a6a4a", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 },
+    card: { background: "rgba(255,255,255,0.02)", border: "1px solid #2a2010", borderRadius: 6, padding: "11px 14px" },
+  };
+
+  return (
+    <div style={S.page}>
+      {/* HEADER */}
+      <div style={S.header}>
+        <div style={S.headerTop}>
+          <div>
+            <div style={S.subLabel}>Beast Mastery Hunter · Level 70 · Draenei · Alliance · Phase 2</div>
+            <div style={S.charName}>⚔ Balashotcala</div>
+            <div style={{ fontSize: 11, color: "#6a8a6a", marginTop: 3 }}>Purple Gryphon · Epic Flying ✓ · Axesmith BS</div>
+            <div style={S.timestamp}>🕐 Last updated: {LAST_UPDATED} — {SESSION_NOTE}</div>
+          </div>
+
+          {/* Progress ring */}
+          <div style={{ textAlign: "center", flexShrink: 0 }}>
+            <div style={{
+              width: 68, height: 68, borderRadius: "50%",
+              background: `conic-gradient(#c8a951 ${pct * 3.6}deg, #1a1a1a ${pct * 3.6}deg)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "2px solid #3a2a0a",
+            }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: "50%", background: "#0f0c05",
+                display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
+              }}>
+                <div style={{ fontSize: 15, fontWeight: "bold", color: "#c8a951" }}>{pct}%</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 9, color: "#7a6a3a", marginTop: 4 }}>{totalDone}/{todos.length} done</div>
+          </div>
+        </div>
+
+        {/* Quick stats */}
+        <div style={S.stats}>
+          {[
+            { label: "Gold (liquid)", value: "45g",       sub: "+3,242g AH incoming",  color: "#c8a951" },
+            { label: "Blacksmithing", value: "370/375",   sub: "Axesmith · 5pts left", color: "#e07b39" },
+            { label: "Engineering",   value: "364/375",   sub: "11pts to Goggles",     color: "#4a90d9" },
+            { label: "2H Axes",       value: "330/350",   sub: "Max before Mooncleaver", color: "#e05a5a" },
+            { label: "Ravager",       value: "Lvl 69",    sub: "Cat 66 · Owl 64",      color: "#5ba85a" },
+            { label: "Beast Lord",    value: "0/4 pieces",sub: "Top priority!",         color: "#9b6fd4" },
+          ].map(s => (
+            <div key={s.label} style={S.statCard}>
+              <div style={S.statLabel}>{s.label}</div>
+              <div style={{ fontSize: 13, fontWeight: "bold", color: s.color }}>{s.value}</div>
+              <div style={S.statSub}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div style={S.tabs}>
+        {[
+          { id: "todo",      label: "📋 To-Do" },
+          { id: "gear",      label: "🛡️ Gear" },
+          { id: "rep",       label: "🏆 Rep" },
+          { id: "questions", label: "❓ Questions" },
+        ].map(tab => (
+          <button key={tab.id} className="tab-btn" onClick={() => setActiveTab(tab.id)} style={{
+            padding: "10px 18px", background: "none", border: "none",
+            borderBottom: activeTab === tab.id ? "2px solid #c8a951" : "2px solid transparent",
+            color: activeTab === tab.id ? "#c8a951" : "#5a4a2a",
+            cursor: "pointer", fontSize: 11, textTransform: "uppercase",
+            letterSpacing: 2, fontFamily: "inherit", whiteSpace: "nowrap", transition: "color 0.2s",
+          }}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* CONTENT */}
+      <div style={S.content}>
+
+        {/* ── TO-DO TAB ── */}
+        {activeTab === "todo" && (
+          <div>
+            {Object.keys(categoryMeta).map(cat => {
+              const items = grouped[cat];
+              const catDone = items.filter(t => t.done).length;
+              const isExpanded = expandedCats.includes(cat);
+              const meta = categoryMeta[cat];
+              return (
+                <div key={cat} style={{ marginBottom: 12 }}>
+                  <button className="cat-btn" onClick={() => toggleCat(cat)} style={{
+                    width: "100%", background: "rgba(255,255,255,0.03)",
+                    border: `1px solid ${meta.color}35`,
+                    borderRadius: isExpanded ? "6px 6px 0 0" : 6,
+                    padding: "9px 14px", display: "flex", alignItems: "center",
+                    justifyContent: "space-between", cursor: "pointer", fontFamily: "inherit",
+                  }}>
+                    <span style={{ color: meta.color, fontWeight: "bold", fontSize: 12 }}>{meta.label}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 10, color: "#7a6a4a" }}>{catDone}/{items.length} done</span>
+                      <span style={{ color: "#5a4a2a", fontSize: 11 }}>{isExpanded ? "▲" : "▼"}</span>
+                    </span>
+                  </button>
+                  {isExpanded && (
+                    <div style={{ border: `1px solid ${meta.color}20`, borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
+                      {items.map((todo, i) => (
+                        <div key={todo.id} className="todo-row" onClick={() => toggleTodo(todo.id)} style={{
+                          display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 14px",
+                          cursor: "pointer",
+                          background: todo.done ? "rgba(91,168,90,0.05)" : i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent",
+                          borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                          transition: "background 0.15s",
+                        }}>
+                          <div style={{
+                            width: 15, height: 15, borderRadius: 3, flexShrink: 0, marginTop: 2,
+                            border: `2px solid ${todo.done ? "#5ba85a" : meta.color}`,
+                            background: todo.done ? "#5ba85a" : "transparent",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            {todo.done && <span style={{ color: "#fff", fontSize: 9, lineHeight: 1 }}>✓</span>}
+                          </div>
+                          <div style={{ flex: 1, fontSize: 12, color: todo.done ? "#4a6a4a" : "#d4b896", textDecoration: todo.done ? "line-through" : "none", lineHeight: 1.45 }}>
+                            {todo.text}
+                          </div>
+                          <div style={{
+                            fontSize: 8, padding: "2px 5px", borderRadius: 3, flexShrink: 0, marginTop: 2,
+                            background: priorityStyle[todo.priority].bg, color: priorityStyle[todo.priority].color,
+                            textTransform: "uppercase", letterSpacing: 1,
+                          }}>
+                            {todo.priority}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── GEAR TAB ── */}
+        {activeTab === "gear" && (
+          <div>
+            <div style={S.sectionLabel}>Current Gear vs Targets</div>
+            <div style={{
+              background: "rgba(155,111,212,0.08)", border: "1px solid rgba(155,111,212,0.3)",
+              borderRadius: 6, padding: "10px 14px", marginBottom: 14, fontSize: 11, color: "#b09ad4", lineHeight: 1.5,
+            }}>
+              🎯 <strong>Beast Lord 4pc strategy:</strong> Farm Helm + Mantle + Handguards + Leggings as your four pieces. This frees the chest slot for Kara drops (Chestguard of the Conniver from Nightbane). 4pc stays BiS through all of P1 and deep into P2 until 4x T5 tokens.
+            </div>
+            <div style={{ display: "grid", gap: 5 }}>
+              {gear.map((g, i) => (
+                <div key={g.slot} style={{
+                  display: "grid", gridTemplateColumns: "80px 1fr 1fr", gap: 10,
+                  padding: "8px 12px", borderRadius: 5, alignItems: "center",
+                  background: g.status === "good" ? "rgba(91,168,90,0.07)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent",
+                  border: `1px solid ${g.status === "good" ? "rgba(91,168,90,0.2)" : "rgba(255,255,255,0.05)"}`,
+                }}>
+                  <div style={{ fontSize: 9, color: "#8a7a5a", textTransform: "uppercase", letterSpacing: 1 }}>{g.slot}</div>
+                  <div style={{ fontSize: 11, color: g.status === "good" ? "#8a9a8a" : "#b09070" }}>{g.item}</div>
+                  <div style={{ fontSize: 11, color: g.status === "good" ? "#5ba85a" : "#4a90d9" }}>
+                    {g.status === "good" ? "✓ Keep" : `→ ${g.target}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── REP TAB ── */}
+        {activeTab === "rep" && (
+          <div>
+            <div style={S.sectionLabel}>Reputation Standings & Goals</div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {reps.map(r => (
+                <div key={r.name} style={S.card}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontSize: 13, color: "#d4b896", fontWeight: "bold" }}>{r.name}</div>
+                    <div style={{ display: "flex", gap: 12, fontSize: 11, alignItems: "center" }}>
+                      <span style={{ color: r.color }}>{r.current}</span>
+                      <span style={{ color: "#4a4a3a" }}>→</span>
+                      <span style={{ color: "#8a9a8a" }}>{r.goal}</span>
+                      <span style={{ color: "#5a5a4a", fontSize: 10 }}>~{r.gap.toLocaleString()} rep to go</span>
+                    </div>
+                  </div>
+                  <div style={{ background: "#1a1a1a", borderRadius: 4, height: 7, overflow: "hidden" }}>
+                    <div style={{
+                      width: `${r.pct}%`, height: "100%", borderRadius: 4,
+                      background: `linear-gradient(90deg, ${r.color}70, ${r.color})`,
+                      transition: "width 0.5s ease",
+                    }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── QUESTIONS TAB ── */}
+        {activeTab === "questions" && (
+          <div>
+            <div style={S.sectionLabel}>Outstanding Questions</div>
+            <div style={{ display: "grid", gap: 8, marginBottom: 24 }}>
+              {questions.map(q => (
+                <div key={q.id} style={{ ...S.card, display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <div style={{
+                    fontSize: 9, padding: "2px 7px", borderRadius: 10, flexShrink: 0, marginTop: 2,
+                    background: q.resolved ? "rgba(91,168,90,0.2)" : "rgba(224,91,91,0.2)",
+                    color: q.resolved ? "#5ba85a" : "#e05a5a",
+                  }}>#{q.id}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, color: "#d4b896", marginBottom: 3 }}>{q.q}</div>
+                    <div style={{ fontSize: 11, color: q.resolved ? "#5ba85a" : "#7a5a5a" }}>
+                      {!q.resolved ? "⚠ Not yet answered — check in game" : `✓ ${q.a}`}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={S.sectionLabel}>Alt Tracker</div>
+            {[
+              { emoji: "🧙", name: "Shadow Priest", level: 66, color: "#9b6fd4", note: "Alchemy 375 · Tailoring 375 (Shadoweave) · Level to 68 → Transmutation Master spec · eventual casual raider" },
+              { emoji: "🐻", name: "Feral Druid",   level: 60, color: "#5ba85a", note: "JC 375/375 · LW ~175 · Casual income alt — daily gem cutting and AH posting" },
+            ].map(alt => (
+              <div key={alt.name} style={{ ...S.card, border: `1px solid ${alt.color}30`, display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
+                  background: `${alt.color}15`, border: `2px solid ${alt.color}45`,
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
+                }}>
+                  {alt.emoji}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: alt.color, fontWeight: "bold" }}>{alt.name} — Level {alt.level}</div>
+                  <div style={{ fontSize: 11, color: "#7a6a4a", marginTop: 3, lineHeight: 1.4 }}>{alt.note}</div>
+                </div>
+              </div>
+            ))}
+
+            <div style={{ ...S.card, marginTop: 16, borderColor: "#3a2a0a" }}>
+              <div style={{ fontSize: 10, color: "#7a6a4a", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Session Log</div>
+              {[
+                { date: "May 17, 2026", note: "Purchased Epic Flying (purple gryphon) · 45g liquid remaining · 3,242g posted on AH" },
+              ].map((log, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, fontSize: 11, color: "#7a6a4a", paddingTop: i > 0 ? 6 : 0, borderTop: i > 0 ? "1px solid #2a2010" : "none" }}>
+                  <span style={{ color: "#5a4a2a", flexShrink: 0 }}>{log.date}</span>
+                  <span>{log.note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Dashboard />);
+</script>
+</body>
+</html>

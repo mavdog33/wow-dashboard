@@ -1,431 +1,548 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Balashotcala — Hunter Dashboard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0a0a0f; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0a0f; }
-    ::-webkit-scrollbar-thumb { background: #3a2a0a; border-radius: 3px; }
-    .todo-row:hover { background: rgba(200,169,81,0.05) !important; }
-    .tab-btn:hover { color: #c8a951 !important; }
-    .cat-btn:hover { opacity: 0.85; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balashotcala — TBC Dashboard v6</title>
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#14171f; --panel2:#191d27; --line:#2a2f3d;
+    --gold:#ffd100; --epic:#a335ee; --rare:#0070dd; --green:#1eff00;
+    --red:#ff5c5c; --amber:#ffb84d; --txt:#d7dae2; --mut:#8b91a0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.45;padding:16px;max-width:1000px;margin:0 auto}
+  h1{font-family:Georgia,'Times New Roman',serif;color:var(--gold);font-size:25px;letter-spacing:.5px}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:12px}
+  h2{font-family:Georgia,serif;color:var(--gold);font-size:18px;margin:20px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  h3{color:var(--txt);font-size:15px;margin:14px 0 6px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+  .mono{font-family:Consolas,Menlo,monospace}
+  .epic{color:var(--epic);font-weight:600}.rare{color:var(--rare);font-weight:600}
+  .good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}
+  .mut{color:var(--mut)} .small{font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{color:var(--mut);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td{padding:7px 8px;border-bottom:1px solid #1e222d;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  /* tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+  .tab{background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:8px 13px;font-size:14px;cursor:pointer}
+  .tab.active{background:var(--gold);color:#111;font-weight:700;border-color:var(--gold)}
+  .tabpanel{display:none}.tabpanel.active{display:block}
+  /* banner */
+  .banner{background:linear-gradient(90deg,#1c1305,#14171f);border:1px solid #5c4a12;border-radius:8px;padding:12px 14px;margin-bottom:12px}
+  /* engine */
+  .gauge-wrap{position:relative;height:64px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:10px 0 6px}
+  .gauge-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#0d5c22,#1eff00);transition:width .4s ease}
+  .gauge-cap{position:absolute;top:0;bottom:0;width:2px;background:var(--gold)}
+  .gauge-cap span{position:absolute;top:2px;left:5px;font-size:11px;color:var(--gold);white-space:nowrap;font-family:Consolas,monospace}
+  .gauge-cap.inactive{background:var(--mut)}
+  .gauge-cap.inactive span{color:var(--mut)}
+  .gauge-num{position:absolute;right:10px;bottom:6px;font-family:Consolas,monospace;font-size:26px;font-weight:700;text-shadow:0 0 6px #000}
+  #verdict{font-size:15px;margin-top:8px}
+  .toggle-row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+  .tog{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer;user-select:none}
+  .tog input{accent-color:var(--gold);width:16px;height:16px;cursor:pointer}
+  input[type=number]{background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--txt);padding:6px 8px;width:90px;font-family:Consolas,monospace;font-size:15px}
+  .chk{accent-color:var(--epic);width:16px;height:16px;cursor:pointer}
+  .rule{border-left:3px solid var(--gold);padding:8px 12px;background:var(--panel2);border-radius:0 6px 6px 0;margin:8px 0}
+  .rule.red{border-left-color:var(--red)}
+  .rule.green{border-left-color:var(--green)}
+  .pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);color:var(--mut);margin-left:6px;vertical-align:middle}
+  .done{color:var(--green)}
+  /* acquisition tags */
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:0 6px;border-radius:4px;margin-left:4px;vertical-align:middle;letter-spacing:.3px}
+  .t-raid{background:#3a1f4d;color:#c98aff}.t-her{background:#15314d;color:#6db3f2}.t-badge{background:#4d3a15;color:#ffd166}.t-rep{background:#1f4d2a;color:#7ae08c}.t-craft{background:#4d2a15;color:#ffa366}.t-arena{background:#4d1526;color:#ff7aa0}.t-world{background:#2a2a4d;color:#9a9aff}.t-quest{background:#2e4d15;color:#b3e07a}
+  /* alternatives expandables */
+  details{background:var(--panel2);border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:0}
+  summary{cursor:pointer;padding:8px 12px;font-weight:600;color:var(--txt);user-select:none;list-style:none}
+  summary::before{content:"▸ ";color:var(--gold)}
+  details[open] summary::before{content:"▾ "}
+  details .alt-body{padding:2px 14px 10px;font-size:13px;line-height:1.6;color:var(--mut)}
+  details .alt-body b{color:var(--txt)}
+  @media(max-width:640px){body{padding:10px;font-size:14px} td,th{padding:5px 5px} .gauge-num{font-size:20px}}
+</style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState } = React;
 
-const LAST_UPDATED = "May 17, 2026";
-const SESSION_NOTE = "Epic flying purchased · Gold: 45g liquid + 3,242g AH incoming";
+<h1>Balashotcala</h1>
+<div class="sub">70 Draenei BM Hunter · Alliance · Aldor · TBC Anniversary Phase 2 · Dashboard v6 — Jul 2 2026</div>
 
-const initialTodos = [
-  { id: 1,  category: "solo",       text: "Transfer 24g from alt to hunter",                                                                    done: false, priority: "high"   },
-  { id: 2,  category: "solo",       text: "Deadwind Pass → Archmage Alturus → start Kara attunement solo quests → Alterac → Cedric → Khadgar",  done: false, priority: "high"   },
-  { id: 3,  category: "solo",       text: "Azshara → Wavethrasher Hydras (0/6 scales) → Sunken Temple → kill Morphaz → Devilsaur Tooth",        done: false, priority: "high"   },
-  { id: 4,  category: "solo",       text: "Blade's Edge Mountains → Kaylaan's Signet quest chain (Deathblow to the Legion) — free BiS ring",    done: false, priority: "high"   },
-  { id: 5,  category: "solo",       text: "Max Two-Handed Axes to 350/350 on training dummy before equipping Mooncleaver",                      done: false, priority: "medium" },
-  { id: 6,  category: "solo",       text: "Turn in Orders from Lady Vashj in Shattrath",                                                        done: false, priority: "medium" },
-  { id: 7,  category: "crafting",   text: "Farm Felsteel Gloves recipe from Auchenai Crypts monks → BS to 375",                                 done: false, priority: "high"   },
-  { id: 8,  category: "crafting",   text: "Craft Mooncleaver (BS 375 + 4x Primal Nether from heroics + ~400-500g buyable mats)",                done: false, priority: "high"   },
-  { id: 9,  category: "crafting",   text: "Engineering to 375 (11 points needed) → Surestrike Goggles v2.0 + Turbo-Charged Flying Machine",     done: false, priority: "medium" },
-  { id: 10, category: "rep",        text: "Honor Hold → Revered (~9,000 rep) → buy Flamewrought Key → Heroic Shattered Halls",                  done: false, priority: "high"   },
-  { id: 11, category: "rep",        text: "Cenarion Expedition → Revered (~9,000 rep) → buy Reservoir Key → Heroic Steamvault/Slave Pens",      done: false, priority: "high"   },
-  { id: 12, category: "rep",        text: "Lower City → Revered (~9,000 rep) → buy Auchenai Key → Heroic Shadow Lab",                           done: false, priority: "high"   },
-  { id: 13, category: "rep",        text: "Sha'tar → Revered (~21,000 rep) → buy Warpforged Key → run normal Mechanar/Botanica to build rep",   done: false, priority: "high"   },
-  { id: 14, category: "rep",        text: "Keepers of Time → Revered (~21,000 rep) → buy Key of Time → Heroic Black Morass",                    done: false, priority: "high"   },
-  { id: 15, category: "rep",        text: "Kurenai → Honored (~3,000 rep) → Clefthoof Hide Quiver (turn in Obsidian Warbeads from Nagrand)",    done: false, priority: "medium" },
-  { id: 16, category: "rep",        text: "Consortium → Honored (~3,000 rep) → Smuggler's Ammo Pouch",                                          done: false, priority: "medium" },
-  { id: 17, category: "rep",        text: "Aldor → Revered (~9,000 rep) → Greater Inscription of Vengeance (BiS shoulder enchant)",             done: false, priority: "medium" },
-  { id: 18, category: "kara",       text: "Sethekk Halls normal → kill Talon King Ikiss → loot Shadow Lab Key",                                 done: false, priority: "high"   },
-  { id: 19, category: "kara",       text: "Shadow Labyrinth → First Key Fragment (must have Entry Into Karazhan quest active first!)",           done: false, priority: "high"   },
-  { id: 20, category: "kara",       text: "Steamvault → Second Key Fragment (in water before first boss — no full clear needed)",                done: false, priority: "high"   },
-  { id: 21, category: "kara",       text: "Arcatraz attunement chain → run Arcatraz → Third Key Fragment",                                      done: false, priority: "high"   },
-  { id: 22, category: "kara",       text: "Old Hillsbrad → Black Morass → Master's Key → 🎉 KARA ATTUNED!",                                     done: false, priority: "high"   },
-  { id: 23, category: "gear",       text: "Heroic Shattered Halls → Beast Lord Handguards (Kargath Bladefist, 16%) — locked until T5",          done: false, priority: "high"   },
-  { id: 24, category: "gear",       text: "Heroic Mechanar → Beast Lord Helm (Pathaleon, 16%) + Abacus of Violent Odds — same run",             done: false, priority: "high"   },
-  { id: 25, category: "gear",       text: "Heroic Steamvault → Beast Lord Mantle + Beast Lord Leggings + Wrathtide Longbow (Kalithresh)",       done: false, priority: "high"   },
-  { id: 26, category: "gear",       text: "Old Hillsbrad normal → Nightfall Wristguards (Epoch Hunter, 25%) — no heroic key needed",            done: false, priority: "medium" },
-  { id: 27, category: "gear",       text: "Heroic Slave Pens → Midnight Legguards (Quagmirran, 25%) — backup legs if BL Leggings slow to drop", done: false, priority: "medium" },
-  { id: 28, category: "badges",     text: "41 Badges of Justice → Bloodlust Brooch — highest priority BoJ spend, carries into P2",             done: false, priority: "high"   },
-  { id: 29, category: "badges",     text: "25 Badges of Justice → Choker of Vile Intent — carries through all of P1",                          done: false, priority: "high"   },
-  { id: 30, category: "postkara",   text: "Raid Karazhan weekly → Violet Eye to Honored → Nightbane attunement → Blackened Urn",               done: false, priority: "medium" },
-  { id: 31, category: "postkara",   text: "Kill Nightbane + Gruul → SSC progression unlocked",                                                  done: false, priority: "medium" },
-  { id: 32, category: "postkara",   text: "Cipher of Damnation + Trial of Naaru heroics + Magtheridon kill → TK progression",                  done: false, priority: "low"    },
-  { id: 33, category: "background", text: "Wintersaber Trainers Revered → Exalted (~25 cycles remaining) — podcast grind",                     done: false, priority: "low"    },
-  { id: 34, category: "background", text: "Cycle owl → cat through rep grinds to passively level pets to 70 (Ravager 69, Cat 66, Owl 64)",     done: false, priority: "low"    },
-  { id: 35, category: "alts",       text: "Level Shadow Priest 66 → 68 → choose Transmutation Master alchemy spec",                            done: false, priority: "low"    },
-  { id: 36, category: "alts",       text: "Use Druid JC 375 for daily gem cutting and AH income (casual income alt)",                          done: false, priority: "low"    },
-];
+<div class="banner">
+  <b class="good">✔ Nightbane down + Blazing Signet looted (Jul 10).</b> <b class="warn">One step to SSC-attuned:</b> turn in The Cudgel of Kar'desh to Skar'this in H.Slave Pens (fold into next Coilfang daily) → Mark of Vashj. · <b class="good">T4 legs (Demon Stalker Greaves) equipped — hit now 122, 4 from pug cap.</b> · Cenarion Revered ✅ · Ferocious Swift-Kickers (agi-gem). · BoJ <span class="mono">24</span> · Confirm rep/gold next login
+</div>
 
-const reps = [
-  { name: "Honor Hold",          current: "Honored",  goal: "Revered", gap: 9000,  color: "#4a90d9", pct: 55 },
-  { name: "Cenarion Expedition", current: "Honored",  goal: "Revered", gap: 9000,  color: "#5ba85a", pct: 55 },
-  { name: "Lower City",          current: "Honored",  goal: "Revered", gap: 9000,  color: "#c97a2a", pct: 55 },
-  { name: "The Aldor",           current: "Honored",  goal: "Revered", gap: 9000,  color: "#9b6fd4", pct: 55 },
-  { name: "The Sha'tar",         current: "Friendly", goal: "Revered", gap: 21000, color: "#4a90d9", pct: 20 },
-  { name: "Keepers of Time",     current: "Friendly", goal: "Revered", gap: 21000, color: "#c97a2a", pct: 20 },
-  { name: "Kurenai",             current: "Friendly", goal: "Honored", gap: 3000,  color: "#5ba85a", pct: 35 },
-  { name: "The Consortium",      current: "Friendly", goal: "Honored", gap: 3000,  color: "#9b6fd4", pct: 35 },
-  { name: "Wintersaber Trainers",current: "Revered",  goal: "Exalted", gap: 21000, color: "#c0c0c0", pct: 70 },
-];
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('gear')">⚔ Gear</button>
+  <button class="tab" onclick="switchTab('hit')">🎯 Hit Engine</button>
+  <button class="tab" onclick="switchTab('sr')">📈 SR &amp; Swap Chains</button>
+  <button class="tab" onclick="switchTab('raids')">🐉 Raids</button>
+  <button class="tab" onclick="switchTab('dungeons')">🗺 Dungeons</button>
+  <button class="tab" onclick="switchTab('todo')">📋 To-Do</button>
+  <button class="tab" onclick="switchTab('rep')">🏅 Rep &amp; BoJ</button>
+</div>
 
-const gear = [
-  { slot: "Head",      item: "Dream-Wing Helm",              target: "Beast Lord Helm",                  status: "upgrade" },
-  { slot: "Neck",      item: "Pendant of Cunning",           target: "Choker of Vile Intent (25 BoJ)",   status: "upgrade" },
-  { slot: "Shoulders", item: "Consortium Mantle",            target: "Beast Lord Mantle",                status: "upgrade" },
-  { slot: "Back",      item: "Cloak of the Craft",           target: "Vengeance Wrap (BoE Tailoring)",   status: "upgrade" },
-  { slot: "Chest",     item: "Warden's Hauberk",             target: "Beast Lord Cuirass (low priority)", status: "upgrade" },
-  { slot: "Wrist",     item: "Spymistress's Wristguards",    target: "Nightfall Wristguards",            status: "upgrade" },
-  { slot: "Hands",     item: "Bloodstained Ravager Gauntlets", target: "Beast Lord Handguards",          status: "upgrade" },
-  { slot: "Waist",     item: "Marsh Survivalist's Belt",     target: "Dunewind Sash (H. Underbog)",      status: "upgrade" },
-  { slot: "Legs",      item: "Scaled Greaves of Patience",   target: "Beast Lord Leggings",              status: "upgrade" },
-  { slot: "Feet",      item: "Sky-Hunter Swift Boots",       target: "Boots of the Endless Hunt",        status: "upgrade" },
-  { slot: "Ring 1",    item: "Pathfinder's Band",            target: "Kaylaan's Signet (free quest!)",   status: "upgrade" },
-  { slot: "Ring 2",    item: "Ravenclaw Band",               target: "Keep — BiS non-Aldor option",     status: "good"    },
-  { slot: "Trinket 1", item: "Bladefist's Breadth",          target: "Bloodlust Brooch (41 BoJ)",        status: "upgrade" },
-  { slot: "Trinket 2", item: "Terokkar Tablet of Precision", target: "Abacus of Violent Odds (H. Mech)", status: "upgrade" },
-  { slot: "2H Weapon", item: "Terokk's Quill",               target: "Mooncleaver (craft — BS 375)",     status: "upgrade" },
-  { slot: "Ranged",    item: "Barreled Crossbow of the Bandit", target: "Wrathtide Longbow (H. Steamvault)", status: "upgrade" },
-];
+<!-- ═══════════════ GEAR ═══════════════ -->
+<div class="tabpanel active" id="panel-gear">
+<div class="panel">
+  <table>
+    <tr><th>Slot</th><th>Current</th><th>Phase 2 (SSC/TK)</th><th>Phase 3 (BT/Hyjal)</th></tr>
+    <tr><td>Head</td><td class="rare">Beast Lord Helm</td><td class="mut">Rift Stalker Helm <span class="small">(Vashj, T5 core)</span></td><td class="mut">Cursed Vision of Sargeras <span class="small">(Illidan) — top priority, breaks T5</span></td></tr>
+    <tr><td>Neck</td><td class="epic">Choker of Vile Intent</td><td class="mut">Telonicus's Pendant of Mayhem <span class="small">(Kael quest — contested)</span></td><td class="mut">Choker of Serrated Blades <span class="small">(BT/Hyjal trash)</span></td></tr>
+    <tr><td>Shoulders</td><td class="rare">Beast Lord Mantle</td><td class="mut">Rift Stalker Mantle <span class="small">(Void Reaver, T5 core)</span></td><td class="mut">Gronnstalker's Spaulders <span class="small">(Shahraz, T6 — early 4pc break)</span></td></tr>
+    <tr><td>Back</td><td class="epic">Vengeance Wrap</td><td class="mut">Thalassian Wildercloak <span class="small">(Kael'thas)</span> · Drape of Dark Reavers = hit option <span class="small">(Aran)</span></td><td class="mut">Thalassian holds / Shadowmoon Destroyer's Drape <span class="small">(Gorefiend)</span></td></tr>
+    <tr><td>Chest</td><td class="rare">Beast Lord Cuirass</td><td class="mut">Rift Stalker Hauberk <span class="small">(Kael'thas, T5 core)</span></td><td class="mut">Gronnstalker's Chestguard <span class="small">(Illidan, T6) — pass to warriors first</span></td></tr>
+    <tr><td>Wrist</td><td class="epic">Nightfall Wristguards</td><td class="mut">Vambraces of Ending <span class="small">(Solarian, TK)</span></td><td class="mut">Insidious Bands <span class="small">(Gorefiend) — hit, grab early</span></td></tr>
+    <tr><td>Hands</td><td class="rare">Beast Lord Handguards</td><td class="mut">Rift Stalker Gauntlets <span class="small">(Leotheras, T5 core)</span></td><td class="mut">Gronnstalker's Gloves <span class="small">(Azgalor, T6 — 4pc break w/ shoulders)</span></td></tr>
+    <tr><td>Waist</td><td class="epic">Girdle of the Deathdealer</td><td class="mut">Belt of Deep Shadow <span class="small">(LW craft — buy/guildie)</span> · Belt of One-Hundred Deaths <span class="small">(Vashj, melee get prio)</span> — <span class="bad">hit-loss rule</span></td><td class="mut">Don Alejandro's Money Belt <span class="small">(Anetheron)</span> / Boneweave Girdle <span class="small">(hit)</span></td></tr>
+    <tr><td>Legs</td><td class="epic">Demon Stalker Greaves <span class="done">✔</span> <span class="small">(T4, +15 hit)</span></td><td class="mut">Leggings of Murderous Intent <span class="small">(Kael'thas, off-set BiS)</span></td><td class="mut">Gronnstalker's Leggings <span class="small">(Illidari Council, T6 — finishes 4pc)</span></td></tr>
+    <tr><td>Feet</td><td class="rare">Master's Treads / <span class="epic">Ferocious Swift-Kickers</span></td><td>Edgewalker Longboots <span class="small">(Moroes, SR#1)</span> → Cobra-Lash <span class="small">(Vashj)</span> / Star-Strider <span class="small">(Solarian) — identical</span></td><td class="mut">Shadowmaster's Boots <span class="small">(Shahraz)</span> · keep Edgewalker for 4pc-T6 hit</td></tr>
+    <tr><td>Ring 1</td><td class="rare">Kaylaan's Signet</td><td class="mut">Band of the Ranger-General <span class="small">(Kael — best in 6% AND 9% sets)</span></td><td class="mut">Stormrage Signet <span class="small">(Illidan)</span> / Band of the Eternal Champion <span class="small">(Scale of Sands Exalted)</span></td></tr>
+    <tr><td>Ring 2</td><td class="rare">Slayer's Mark of the Redemption</td><td class="mut">Ring of the Recalcitrant <span class="small">(6% set — Mag head, in bags?)</span> / Ring of Lethality <span class="small">(9% set, Hydross)</span></td><td class="mut">Ring of Deceitful Intent <span class="small">(Shade of Akama, hit)</span></td></tr>
+    <tr><td>Trinket 1</td><td class="epic">Bloodlust Brooch</td><td class="mut">stays (still great)</td><td class="mut">Madness of the Betrayer <span class="small">(Illidari Council)</span></td></tr>
+    <tr><td>Trinket 2</td><td class="rare">Hourglass of the Unraveller</td><td>Dragonspine Trophy <span class="small">(Gruul SR#1 forever)</span></td><td class="mut">Dragonspine Trophy stays #1 · Ashtongue Talisman <span class="small">(Ashtongue Exalted)</span></td></tr>
+    <tr><td>2H / DW</td><td class="epic">Mooncleaver <span class="done">✔</span></td><td class="mut">Twinblade of the Phoenix <span class="small">(Kael'thas)</span> or <b>Bloodmoon</b> <span class="small">(YOUR Axesmith craft!)</span></td><td class="mut">Halberd of Desolation <span class="small">(Naj'entus, hit bridge)</span> → Boundless Agony + Blade of Infamy <span class="small">(Hyjal, DW)</span></td></tr>
+    <tr><td>Ranged</td><td class="epic">Wrathtide Longbow</td><td>Sunfury Bow <span class="small">(Prince)</span> → Serpent Spine Longbow <span class="small">(Vashj, P2 BiS)</span></td><td class="mut">Bristleblitz Striker <span class="small">(Archimonde)</span> / Black Bow of the Betrayer <span class="small">(Illidan)</span></td></tr>
+    <tr><td>Quiver</td><td class="rare">Worg Hide Quiver</td><td class="mut">—</td><td class="mut">—</td></tr>
+  </table>
+  <div class="rule small" style="margin-top:8px"><b>Phase 3 = Black Temple + Mount Hyjal.</b> Two headline items to fight for first, in order: <b>Cursed Vision of Sargeras</b> (helm, Illidan — so big it's worth breaking T5 4pc for, and it restores hit lost dropping T5), then <b>Madness of the Betrayer</b> (trinket). The four <b>Gronnstalker's (T6)</b> tokens rebuild your 4pc — shoulders + gloves are the two to break T5 with first; warriors get chest priority. <b>Halberd of Desolation</b> is a free, uncontested 30-hit 2H bridge early in P3 while you're rebuilding hit — grab it, but drop it for Boundless Agony/Blade of Infamy dual-wield ASAP. Source: Veramos P3 BiS (project file).</div>
+</div>
 
-const questions = [
-  { id: 7,  q: "Arcatraz attunement started?",        a: "No — not in quest log",              resolved: true  },
-  { id: 8,  q: "Deathblow to the Legion started?",    a: "No — not in quest log",              resolved: true  },
-  { id: 13, q: "Alchemy spec preference for priest?", a: "Transmutation Master recommended",   resolved: true  },
-  { id: 15, q: "Level priest before or after Kara?",  a: "Unknown",                            resolved: false },
-];
+<div class="panel">
+  <h3 style="margin-top:0">Alternatives per slot — when BiS won't drop</h3>
+  <div class="small mut" style="margin-bottom:6px">The realistic ladder for each slot. Tags: <span class="tag t-raid">RAID</span><span class="tag t-her">HEROIC</span><span class="tag t-badge">BADGE</span><span class="tag t-rep">REP</span><span class="tag t-craft">CRAFT</span><span class="tag t-arena">ARENA</span><span class="tag t-world">WORLD</span><span class="tag t-quest">QUEST</span></div>
 
-const categoryMeta = {
-  solo:       { label: "⚔️ Solo Tasks",        color: "#c8a951" },
-  crafting:   { label: "🔨 Crafting",           color: "#e07b39" },
-  rep:        { label: "🏆 Rep Grinds",         color: "#5ba85a" },
-  kara:       { label: "🏰 Kara Attunement",    color: "#9b6fd4" },
-  gear:       { label: "🎯 Beast Lord Farming", color: "#4a90d9" },
-  badges:     { label: "🏅 Badge Spending",     color: "#c0c0c0" },
-  postkara:   { label: "⚡ Post-Kara",          color: "#e05a5a" },
-  background: { label: "🌿 Background Grinds", color: "#7a9a7a" },
-  alts:       { label: "👥 Alts",              color: "#9a7a9a" },
-};
+  <details><summary>Head</summary><div class="alt-body">
+  <b>P2:</b> Rift Stalker Helm (Vashj)<span class="tag t-raid">RAID</span> → Surestrike Goggles v2.0<span class="tag t-craft">CRAFT-ENG (yours!)</span> → Demon Stalker Greathelm (your banked token) → Mask of the Deceiver<span class="tag t-badge">50 BoJ</span> → Beast Lord Helm ✔ current<br>
+  <b>P3:</b> Cursed Vision (Illidan) → Vengeful Glad Chain Helm<span class="tag t-arena">ARENA</span> (hit!) → Gronnstalker's Helmet (Archimonde — Survival prio, never take) → Forest Prowler's Helm (Zerevor)
+  </div></details>
 
-const priorityStyle = {
-  high:   { bg: "rgba(224,91,91,0.2)",   color: "#e05a5a" },
-  medium: { bg: "rgba(200,169,81,0.2)",  color: "#c8a951" },
-  low:    { bg: "rgba(90,90,90,0.2)",    color: "#5a5a5a" },
-};
+  <details><summary>Shoulders</summary><div class="alt-body">
+  <b>P2:</b> Rift Stalker Mantle (Void Reaver) → Shoulderpads of the Stranger (Hydross) → Mantle of the Tireless Tracker (Morogrim) → Beast Lord Mantle ✔ current<br>
+  <b>P3:</b> Gronnstalker's Spaulders (Shahraz) → Beast-tamer's Shoulders (Kaz'rogal) → Shoulders of the Hidden Predator (Shade of Akama) → Swiftstrike / Lightning Reflexes<span class="tag t-craft">CRAFT-LW BoP</span>
+  </div></details>
 
-function Dashboard() {
-  const [todos, setTodos] = useState(initialTodos);
-  const [activeTab, setActiveTab] = useState("todo");
-  const [expandedCats, setExpandedCats] = useState(Object.keys(categoryMeta));
+  <details><summary>Back</summary><div class="alt-body">
+  <b>P2:</b> Thalassian Wildercloak (Kael) → Drape of Dark Reavers (Aran, HIT) → Vengeance Wrap ✔ current<span class="tag t-craft">CRAFT</span> → Blood Knight War Cloak<span class="tag t-badge">25 BoJ</span> → Cloak of the Pit Stalker (Mag) → Cloak of the Craft (your bank, hit bench)<br>
+  <b>P3:</b> Thalassian holds → Shadowmoon Destroyer's Drape (Gorefiend — BiS if no Madness/Stormrage)
+  </div></details>
 
-  const toggleTodo = (id) => setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
-  const toggleCat = (cat) => setExpandedCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+  <details><summary>Chest</summary><div class="alt-body">
+  <b>P2:</b> Rift Stalker Hauberk (Kael) → Ranger-General's Chestguard (Hydross, off-set) → Primalstrike Vest<span class="tag t-craft">CRAFT-LW BoP</span> → Beast Lord Cuirass ✔ current · your banked T4 chest token = Demon Stalker Harness (4pc-break era)<br>
+  <b>P3:</b> Gronnstalker's Chestguard (Illidan — warriors first) → Rift Stalker Hauberk holds
+  </div></details>
 
-  const totalDone = todos.filter(t => t.done).length;
-  const pct = Math.round((totalDone / todos.length) * 100);
+  <details><summary>Wrist</summary><div class="alt-body">
+  <b>P2:</b> Vambraces of Ending (Solarian) ≈ Bands of the Celestial Archer<span class="tag t-raid">TK trash BoE — WATCH AH</span> (near-identical, guide says either) → True-Aim Stalker Bands (Leotheras) → Nightfall Wristguards ✔ current<br>
+  <b>P3:</b> Insidious Bands (Gorefiend, HIT — grab early, uncontested) → Wraps of Precise Flight (Supremus) → Bindings of Lightning Reflexes / Swiftstrike<span class="tag t-craft">CRAFT-LW</span>
+  </div></details>
 
-  const grouped = Object.keys(categoryMeta).reduce((acc, cat) => {
-    acc[cat] = todos.filter(t => t.category === cat);
-    return acc;
-  }, {});
+  <details><summary>Hands</summary><div class="alt-body">
+  <b>P2:</b> Rift Stalker Gauntlets (Leotheras — never replaced in P2) → Gloves of Dexterous Manipulation (Attumen) → Gauntlets of the Dragonslayer (Gruul) → Beast Lord Handguards ✔ current<br>
+  <b>P3:</b> Gronnstalker's Gloves (Azgalor — top priority) → Fel Leather Gloves<span class="tag t-craft">CRAFT-LW BoE</span>
+  </div></details>
 
-  const S = {
-    page: {
-      minHeight: "100vh",
-      background: "linear-gradient(160deg, #0a0a0f 0%, #0f0e1a 40%, #0a0f0a 100%)",
-      fontFamily: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
-      color: "#d4b896",
-    },
-    header: {
-      background: "linear-gradient(180deg, #1a1208 0%, #0f0c05 70%, transparent 100%)",
-      borderBottom: "2px solid #5a4a1a",
-      padding: "20px 20px 16px",
-    },
-    headerTop: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
-    subLabel: { fontSize: 10, color: "#8a7a4a", letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 },
-    charName: {
-      fontSize: 26, fontWeight: "bold", letterSpacing: 2,
-      background: "linear-gradient(135deg, #f0c060 0%, #c8a030 50%, #f0c060 100%)",
-      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-    },
-    timestamp: { fontSize: 10, color: "#4a4a3a", marginTop: 6, letterSpacing: 1 },
-    stats: { display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" },
-    statCard: {
-      background: "rgba(255,255,255,0.03)", border: "1px solid #2a2010",
-      borderRadius: 6, padding: "7px 12px", minWidth: 90,
-    },
-    statLabel: { fontSize: 9, color: "#7a6a4a", textTransform: "uppercase", letterSpacing: 1 },
-    statSub: { fontSize: 9, color: "#5a5a4a", marginTop: 1 },
-    tabs: {
-      display: "flex", borderBottom: "1px solid #2a2010",
-      background: "rgba(0,0,0,0.3)", overflowX: "auto",
-    },
-    content: { padding: "16px 20px", maxWidth: 860 },
-    sectionLabel: { fontSize: 10, color: "#7a6a4a", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 },
-    card: { background: "rgba(255,255,255,0.02)", border: "1px solid #2a2010", borderRadius: 6, padding: "11px 14px" },
-  };
+  <details><summary>Waist</summary><div class="alt-body">
+  <b>P2:</b> Belt of Deep Shadow<span class="tag t-craft">CRAFT-LW</span> → Belt of the Black Eagle<span class="tag t-craft">CRAFT-LW</span> → Belt of One-Hundred Deaths (Vashj — melee prio) → Gronn-Stitched Girdle (Gruul) → Girdle of Treachery (Chess) → Girdle of the Deathdealer ✔ current (HIT — the pug-night belt forever)<br>
+  <b>P3:</b> Don Alejandro's Money Belt (Anetheron) → Boneweave Girdle (Essence of Anger, HIT option)
+  </div></details>
 
-  return (
-    <div style={S.page}>
-      {/* HEADER */}
-      <div style={S.header}>
-        <div style={S.headerTop}>
-          <div>
-            <div style={S.subLabel}>Beast Mastery Hunter · Level 70 · Draenei · Alliance · Phase 2</div>
-            <div style={S.charName}>⚔ Balashotcala</div>
-            <div style={{ fontSize: 11, color: "#6a8a6a", marginTop: 3 }}>Purple Gryphon · Epic Flying ✓ · Axesmith BS</div>
-            <div style={S.timestamp}>🕐 Last updated: {LAST_UPDATED} — {SESSION_NOTE}</div>
-          </div>
+  <details><summary>Legs</summary><div class="alt-body">
+  <b>P2:</b> Leggings of Murderous Intent (Kael, off-set BiS) → Void Reaver Greaves → Scaled Greaves of the Marksman (Doom Lord Kazzak)<span class="tag t-world">WORLD BOSS</span> → Rift Stalker Leggings (Karathress — only if chasing T5 4pc via legs) → Demon Stalker Greaves ✔ current<br>
+  <b>P3:</b> Gronnstalker's Leggings (Illidari Council) → Shady Dealer's Pantaloons (Azgalor, no-CVoS route) → Bow-stitched Leggings (Azgalor — Survival/Enh/Ret prio, never take)
+  </div></details>
 
-          {/* Progress ring */}
-          <div style={{ textAlign: "center", flexShrink: 0 }}>
-            <div style={{
-              width: 68, height: 68, borderRadius: "50%",
-              background: `conic-gradient(#c8a951 ${pct * 3.6}deg, #1a1a1a ${pct * 3.6}deg)`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "2px solid #3a2a0a",
-            }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: "50%", background: "#0f0c05",
-                display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
-              }}>
-                <div style={{ fontSize: 15, fontWeight: "bold", color: "#c8a951" }}>{pct}%</div>
-              </div>
-            </div>
-            <div style={{ fontSize: 9, color: "#7a6a3a", marginTop: 4 }}>{totalDone}/{todos.length} done</div>
-          </div>
-        </div>
+  <details><summary>Feet</summary><div class="alt-body">
+  <b>P2:</b> Cobra-Lash (Vashj) ≈ Star-Strider (Solarian) — identical DPS, either works → Boots of Effortless Striking (Lurker) → Edgewalker Longboots (Moroes, SR#1 — hold for P3!) → Shadowstep Striders<span class="tag t-her">H.ARC — key ✅</span> → your two-boot system ✔ current<br>
+  <b>P3:</b> Shadowmaster's Boots (Shahraz) → Edgewalker RETURNS for early 4pc-T6 hit → Softstep Boots of Tracking (Gorefiend) / Quickstrider Moccasins (Anetheron) — temp hit, Enh shamans want them
+  </div></details>
 
-        {/* Quick stats */}
-        <div style={S.stats}>
-          {[
-            { label: "Gold (liquid)", value: "45g",       sub: "+3,242g AH incoming",  color: "#c8a951" },
-            { label: "Blacksmithing", value: "370/375",   sub: "Axesmith · 5pts left", color: "#e07b39" },
-            { label: "Engineering",   value: "364/375",   sub: "11pts to Goggles",     color: "#4a90d9" },
-            { label: "2H Axes",       value: "330/350",   sub: "Max before Mooncleaver", color: "#e05a5a" },
-            { label: "Ravager",       value: "Lvl 69",    sub: "Cat 66 · Owl 64",      color: "#5ba85a" },
-            { label: "Beast Lord",    value: "0/4 pieces",sub: "Top priority!",         color: "#9b6fd4" },
-          ].map(s => (
-            <div key={s.label} style={S.statCard}>
-              <div style={S.statLabel}>{s.label}</div>
-              <div style={{ fontSize: 13, fontWeight: "bold", color: s.color }}>{s.value}</div>
-              <div style={S.statSub}>{s.sub}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+  <details><summary>Neck</summary><div class="alt-body">
+  <b>P2:</b> Telonicus's Pendant of Mayhem (Kael quest — heavily contested) → Choker of Animalistic Fury (Lurker) → Saberclaw Talisman (Aran) → Choker of Vile Intent ✔ current<span class="tag t-badge">BADGE</span> → Jagged Bark Pendant (your bank — agi bench)<br>
+  <b>P3:</b> Choker of Serrated Blades (BT/Hyjal trash — many will drop, no rush) → Choker of Endless Nightmares (Supremus, HIT — contested)
+  </div></details>
 
-      {/* TABS */}
-      <div style={S.tabs}>
-        {[
-          { id: "todo",      label: "📋 To-Do" },
-          { id: "gear",      label: "🛡️ Gear" },
-          { id: "rep",       label: "🏆 Rep" },
-          { id: "questions", label: "❓ Questions" },
-        ].map(tab => (
-          <button key={tab.id} className="tab-btn" onClick={() => setActiveTab(tab.id)} style={{
-            padding: "10px 18px", background: "none", border: "none",
-            borderBottom: activeTab === tab.id ? "2px solid #c8a951" : "2px solid transparent",
-            color: activeTab === tab.id ? "#c8a951" : "#5a4a2a",
-            cursor: "pointer", fontSize: 11, textTransform: "uppercase",
-            letterSpacing: 2, fontFamily: "inherit", whiteSpace: "nowrap", transition: "color 0.2s",
-          }}>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+  <details><summary>Rings</summary><div class="alt-body">
+  <b>P2 (6% set w/ Boomkin):</b> Ring of the Recalcitrant (Mag head — get it in bags NOW) + Band of the Ranger-General (Kael)<br>
+  <b>P2 (9% set no Boomkin):</b> Ring of Lethality (Hydross) + Band of the Ranger-General → Ring of a Thousand Marks (Prince, HIT) → Garona's Signet (Curator) → Band of Eternity<span class="tag t-quest">CoT QUEST</span> → yours ✔ current<br>
+  <b>P3:</b> Stormrage Signet (Illidan — small upgrade for you, pass to others) → Band of the Eternal Champion<span class="tag t-rep">Scale of Sands EXALTED</span> → Ring of Deceitful Intent (Akama, HIT) → Band of Devastation (BT trash)
+  </div></details>
 
-      {/* CONTENT */}
-      <div style={S.content}>
+  <details><summary>Trinkets</summary><div class="alt-body">
+  <b>P2:</b> Dragonspine Trophy (Gruul — SR forever) + Bloodlust Brooch ✔<span class="tag t-badge">BADGE</span> → Tsunami Talisman (Leotheras, short-fight option) → Abacus ✔ / Hourglass ✔ swap system holds<br>
+  <b>P3:</b> DST STAYS #1 + Madness of the Betrayer (Illidari Council — after CVoS + 4pc) → Ashtongue Talisman of Swiftness<span class="tag t-rep">Ashtongue EXALTED</span> ≈ Brooch (near tie)
+  </div></details>
 
-        {/* ── TO-DO TAB ── */}
-        {activeTab === "todo" && (
-          <div>
-            {Object.keys(categoryMeta).map(cat => {
-              const items = grouped[cat];
-              const catDone = items.filter(t => t.done).length;
-              const isExpanded = expandedCats.includes(cat);
-              const meta = categoryMeta[cat];
-              return (
-                <div key={cat} style={{ marginBottom: 12 }}>
-                  <button className="cat-btn" onClick={() => toggleCat(cat)} style={{
-                    width: "100%", background: "rgba(255,255,255,0.03)",
-                    border: `1px solid ${meta.color}35`,
-                    borderRadius: isExpanded ? "6px 6px 0 0" : 6,
-                    padding: "9px 14px", display: "flex", alignItems: "center",
-                    justifyContent: "space-between", cursor: "pointer", fontFamily: "inherit",
-                  }}>
-                    <span style={{ color: meta.color, fontWeight: "bold", fontSize: 12 }}>{meta.label}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 10, color: "#7a6a4a" }}>{catDone}/{items.length} done</span>
-                      <span style={{ color: "#5a4a2a", fontSize: 11 }}>{isExpanded ? "▲" : "▼"}</span>
-                    </span>
-                  </button>
-                  {isExpanded && (
-                    <div style={{ border: `1px solid ${meta.color}20`, borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
-                      {items.map((todo, i) => (
-                        <div key={todo.id} className="todo-row" onClick={() => toggleTodo(todo.id)} style={{
-                          display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 14px",
-                          cursor: "pointer",
-                          background: todo.done ? "rgba(91,168,90,0.05)" : i % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent",
-                          borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                          transition: "background 0.15s",
-                        }}>
-                          <div style={{
-                            width: 15, height: 15, borderRadius: 3, flexShrink: 0, marginTop: 2,
-                            border: `2px solid ${todo.done ? "#5ba85a" : meta.color}`,
-                            background: todo.done ? "#5ba85a" : "transparent",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>
-                            {todo.done && <span style={{ color: "#fff", fontSize: 9, lineHeight: 1 }}>✓</span>}
-                          </div>
-                          <div style={{ flex: 1, fontSize: 12, color: todo.done ? "#4a6a4a" : "#d4b896", textDecoration: todo.done ? "line-through" : "none", lineHeight: 1.45 }}>
-                            {todo.text}
-                          </div>
-                          <div style={{
-                            fontSize: 8, padding: "2px 5px", borderRadius: 3, flexShrink: 0, marginTop: 2,
-                            background: priorityStyle[todo.priority].bg, color: priorityStyle[todo.priority].color,
-                            textTransform: "uppercase", letterSpacing: 1,
-                          }}>
-                            {todo.priority}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+  <details><summary>Weapons (2H / DW / Ranged)</summary><div class="alt-body">
+  <b>P2 2H:</b> Twinblade of the Phoenix (Kael) or <b>Bloodmoon</b><span class="tag t-craft">YOUR AXESMITH CRAFT</span> — check mats, this is your self-made upgrade path → Mooncleaver ✔ current → Legacy (your bank, backup)<br>
+  <b>P3 melee:</b> Halberd of Desolation (Naj'entus, 30 HIT, uncontested early bridge) → Boundless Agony + Blade of Infamy (Hyjal, DW endgame) → Vengeful Glad Rippers<span class="tag t-arena">1850 ARENA</span> (BiS for 6200-armor bosses!) → Talon/Claw of the Phoenix (Al'ar, P2 carryover)<br>
+  <b>P2 ranged:</b> Serpent Spine Longbow (Vashj, BiS) → Merciless Glad Crossbow<span class="tag t-arena">3750 ARENA</span> → Sunfury Bow (Prince) → Wrathtide ✔ current<br>
+  <b>P3 ranged:</b> Bristleblitz Striker (Archimonde) → Black Bow of the Betrayer (Illidan — mana return, speedrun option)
+  </div></details>
+</div>
 
-        {/* ── GEAR TAB ── */}
-        {activeTab === "gear" && (
-          <div>
-            <div style={S.sectionLabel}>Current Gear vs Targets</div>
-            <div style={{
-              background: "rgba(155,111,212,0.08)", border: "1px solid rgba(155,111,212,0.3)",
-              borderRadius: 6, padding: "10px 14px", marginBottom: 14, fontSize: 11, color: "#b09ad4", lineHeight: 1.5,
-            }}>
-              🎯 <strong>Beast Lord 4pc strategy:</strong> Farm Helm + Mantle + Handguards + Leggings as your four pieces. This frees the chest slot for Kara drops (Chestguard of the Conniver from Nightbane). 4pc stays BiS through all of P1 and deep into P2 until 4x T5 tokens.
-            </div>
-            <div style={{ display: "grid", gap: 5 }}>
-              {gear.map((g, i) => (
-                <div key={g.slot} style={{
-                  display: "grid", gridTemplateColumns: "80px 1fr 1fr", gap: 10,
-                  padding: "8px 12px", borderRadius: 5, alignItems: "center",
-                  background: g.status === "good" ? "rgba(91,168,90,0.07)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent",
-                  border: `1px solid ${g.status === "good" ? "rgba(91,168,90,0.2)" : "rgba(255,255,255,0.05)"}`,
-                }}>
-                  <div style={{ fontSize: 9, color: "#8a7a5a", textTransform: "uppercase", letterSpacing: 1 }}>{g.slot}</div>
-                  <div style={{ fontSize: 11, color: g.status === "good" ? "#8a9a8a" : "#b09070" }}>{g.item}</div>
-                  <div style={{ fontSize: 11, color: g.status === "good" ? "#5ba85a" : "#4a90d9" }}>
-                    {g.status === "good" ? "✓ Keep" : `→ ${g.target}`}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+<div class="panel">
+  <h3 style="margin-top:0">Feet — two-boot system</h3>
+  <div class="rule green"><b>Ferocious Swift-Kickers</b> (Nightbane) — 25 agi / 20 stam / 17 crit / 24 haste / 2 sockets / +49 AP bonus, <b>0 hit</b>. <b>Pair 1: gem Agility (2× Delicate).</b> Wear on Boomkin/capped nights for max throughput.</div>
+  <div class="rule"><b>Master's Treads</b> (16 hit) — pug-night / no-Boomkin hit boot. Bank it, swap in whenever you're scraping for cap. Boot-slot twin of the Deathdealer belt rule.</div>
+  <div class="rule"><b>If a 2nd pair of Swift-Kickers drops: gem Hit (2× Glinting = +8 hit)</b> and retire Master's Treads entirely — gets the hit role back PLUS crit/haste/AP.</div>
+  <div class="rule green" style="border-left-color:var(--gold)"><b>Edgewalker Longboots (SR#1)</b> ends the whole dance — gemmed = 24 hit AND 29 agi, one boot for both jobs.</div>
+</div>
 
-        {/* ── REP TAB ── */}
-        {activeTab === "rep" && (
-          <div>
-            <div style={S.sectionLabel}>Reputation Standings & Goals</div>
-            <div style={{ display: "grid", gap: 8 }}>
-              {reps.map(r => (
-                <div key={r.name} style={S.card}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                    <div style={{ fontSize: 13, color: "#d4b896", fontWeight: "bold" }}>{r.name}</div>
-                    <div style={{ display: "flex", gap: 12, fontSize: 11, alignItems: "center" }}>
-                      <span style={{ color: r.color }}>{r.current}</span>
-                      <span style={{ color: "#4a4a3a" }}>→</span>
-                      <span style={{ color: "#8a9a8a" }}>{r.goal}</span>
-                      <span style={{ color: "#5a5a4a", fontSize: 10 }}>~{r.gap.toLocaleString()} rep to go</span>
-                    </div>
-                  </div>
-                  <div style={{ background: "#1a1a1a", borderRadius: 4, height: 7, overflow: "hidden" }}>
-                    <div style={{
-                      width: `${r.pct}%`, height: "100%", borderRadius: 4,
-                      background: `linear-gradient(90deg, ${r.color}70, ${r.color})`,
-                      transition: "width 0.5s ease",
-                    }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+<div class="panel">
+  <h3 style="margin-top:0">Bank inventory — keep / bench / vendor <span class="pill">verified Jul 10</span></h3>
+  <table>
+    <tr><th>Item</th><th>Call</th><th>Why</th></tr>
+    <tr><td><span class="epic">Legacy</span> <span class="mut small">(2H axe, Opera)</span></td><td class="warn">KEEP — compare</td><td class="mut">40 agi/46 stam/80 AP epic. Mooncleaver (106 AP/52 crit +35 agi enchant) wins on paper, but Legacy is a real backup 2H. Don't enchant — Mooncleaver stays mainhand.</td></tr>
+    <tr><td><span class="rare">Jagged Bark Pendant</span> <span class="mut small">(neck)</span></td><td class="good">KEEP — bench</td><td class="mut">P1 BiS-tier neck (high agi/AP, 0 hit). Choker of Vile Intent (16 hit) stays equipped on pug nights; Jagged is your Boomkin-night neck swap for raw agi.</td></tr>
+    <tr><td><span class="rare">Cloak of the Craft</span> <span class="mut small">(back)</span></td><td class="good">KEEP — hit bench</td><td class="mut">13 hit + agi/AP. Back-slot hit swap until Drape of the Dark Reavers drops. Useful pug nights if scraping for cap.</td></tr>
+    <tr><td><span class="rare">Stealther's Helmet of Second Sight</span></td><td class="good">KEEP</td><td class="mut">13 hit, 3 sockets — emergency hit-helm. Also a Cipher of Damnation / TK-attune breadcrumb.</td></tr>
+    <tr><td><span class="epic">Ferocious Swift-Kickers</span></td><td class="good">KEEP — equip</td><td class="mut">Capped-night boot, agi-gemmed. See Feet panel.</td></tr>
+    <tr><td>Helm of the Fallen Hero <span class="mut small">(T4 token)</span></td><td class="good">REDEEM → PvP</td><td class="mut">Phase 2 change: T4 tokens trade for S1 Gladiator gear. Redeem for <b>Gladiator's Pursuit</b> (hunter S1 helm) for your arena set — resilience you can't get elsewhere, skips the Arena Point grind. NOT the PvE Demon Stalker helm (bench-tier). One-time irreversible choice. Arena vendor: Area 52 / Nagrand Ring of Trials / Shattrath.</td></tr>
+    <tr><td><span class="epic">Beastmaw Pauldrons</span></td><td class="mut">BANK</td><td class="mut">Gemmed BL Mantle wins. Emergency shoulder only.</td></tr>
+    <tr><td><span class="epic">Bladed Shoulderpads of the Merciless</span> <span class="mut small">(Chess)</span></td><td class="mut">BANK</td><td class="mut">Agi/crit/haste + 2 sockets, but BL Mantle holds 4pc. For SSC/TK 4pc-break era.</td></tr>
+    <tr><td>Empowered Fire Opal <span class="mut small">(gem)</span></td><td class="warn">PvP set</td><td class="mut">+8 AP / +5 Resilience — gem for the Gladiator's Pursuit helm above. Its home is your arena set.</td></tr>
+    <tr><td class="bad">Felboar Hide Shoes</td><td class="bad">VENDOR</td><td class="mut">Loses to Treads &amp; Swift-Kickers.</td></tr>
+    <tr><td class="bad">Dream-Wing Helm</td><td class="bad">VENDOR</td><td class="mut">Outclassed by Stealther's.</td></tr>
+    <tr><td class="bad">Scaled Greaves of Patience</td><td class="bad">VENDOR</td><td class="mut">Leveling blue legs, crushed by BL Leggings.</td></tr>
+    <tr><td class="bad">Aggressor's Mark of the Sha'tar</td><td class="bad">VENDOR</td><td class="mut">Lvl 30 leveling ring. Trivial.</td></tr>
+    <tr><td class="bad">Ravenclaw Band</td><td class="bad">VENDOR</td><td class="mut">Non-Aldor Slayer's alt — you have both better rings equipped.</td></tr>
+  </table>
+  <div class="rule small" style="margin-top:8px"><b>Enchant/gem NOTHING in the bank.</b> Every keeper is a situational swap, not a permanent equip — enchants/gems are gold you'd sink into a bench piece you rarely wear. Exceptions if you commit to wearing one full-time: Jagged Bark (Enchant Neck n/a in TBC — nothing to do), Cloak of the Craft (would take Greater Agility only if it becomes your main cloak, which it won't — Drape is coming). Hold your mats for <b>Edgewalker</b> (Cat's Swiftness ready) and re-gems on real upgrades.</div>
+</div>
 
-        {/* ── QUESTIONS TAB ── */}
-        {activeTab === "questions" && (
-          <div>
-            <div style={S.sectionLabel}>Outstanding Questions</div>
-            <div style={{ display: "grid", gap: 8, marginBottom: 24 }}>
-              {questions.map(q => (
-                <div key={q.id} style={{ ...S.card, display: "flex", alignItems: "flex-start", gap: 14 }}>
-                  <div style={{
-                    fontSize: 9, padding: "2px 7px", borderRadius: 10, flexShrink: 0, marginTop: 2,
-                    background: q.resolved ? "rgba(91,168,90,0.2)" : "rgba(224,91,91,0.2)",
-                    color: q.resolved ? "#5ba85a" : "#e05a5a",
-                  }}>#{q.id}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, color: "#d4b896", marginBottom: 3 }}>{q.q}</div>
-                    <div style={{ fontSize: 11, color: q.resolved ? "#5ba85a" : "#7a5a5a" }}>
-                      {!q.resolved ? "⚠ Not yet answered — check in game" : `✓ ${q.a}`}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+<div class="panel">
+  <h3 style="margin-top:0">Bank / hold — 4pc &amp; hit rules (equip logic)</h3>
+  <div class="small mut"><b>The set rule:</b> you own all 5 Beast Lord pieces but only need 4. Your one "open" set slot is always <b>whichever piece has the best non-set upgrade</b> — that's <b>Leggings</b> (→ T4 legs / Skulker's). Helm/Mantle/Cuirass/Handguards are permanent because their alternatives (T4 helm, Beastmaw, T4 chest, Liar's Tongue) are all worse. That's why T4 helm/shoulders/chest bank while T4 legs equips. T4 chest also can't co-exist with T4 legs (would drop you to 3 BL pieces) — bank it for the SSC/TK era when the whole set dissolves.</div>
+</div>
+</div>
 
-            <div style={S.sectionLabel}>Alt Tracker</div>
-            {[
-              { emoji: "🧙", name: "Shadow Priest", level: 66, color: "#9b6fd4", note: "Alchemy 375 · Tailoring 375 (Shadoweave) · Level to 68 → Transmutation Master spec · eventual casual raider" },
-              { emoji: "🐻", name: "Feral Druid",   level: 60, color: "#5ba85a", note: "JC 375/375 · LW ~175 · Casual income alt — daily gem cutting and AH posting" },
-            ].map(alt => (
-              <div key={alt.name} style={{ ...S.card, border: `1px solid ${alt.color}30`, display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
-                <div style={{
-                  width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-                  background: `${alt.color}15`, border: `2px solid ${alt.color}45`,
-                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
-                }}>
-                  {alt.emoji}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, color: alt.color, fontWeight: "bold" }}>{alt.name} — Level {alt.level}</div>
-                  <div style={{ fontSize: 11, color: "#7a6a4a", marginTop: 3, lineHeight: 1.4 }}>{alt.note}</div>
-                </div>
-              </div>
-            ))}
+<!-- ═══════════════ HIT ENGINE ═══════════════ -->
+<div class="tabpanel" id="panel-hit">
 
-            <div style={{ ...S.card, marginTop: 16, borderColor: "#3a2a0a" }}>
-              <div style={{ fontSize: 10, color: "#7a6a4a", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Session Log</div>
-              {[
-                { date: "May 17, 2026", note: "Purchased Epic Flying (purple gryphon) · 45g liquid remaining · 3,242g posted on AH" },
-              ].map((log, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, fontSize: 11, color: "#7a6a4a", paddingTop: i > 0 ? 6 : 0, borderTop: i > 0 ? "1px solid #2a2010" : "none" }}>
-                  <span style={{ color: "#5a4a2a", flexShrink: 0 }}>{log.date}</span>
-                  <span>{log.note}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+<div class="panel">
+  <h3 style="margin-top:0">⚡ Tonight's loadout — one glance before the pull</h3>
+  <table>
+    <tr><th></th><th class="warn">PUG NIGHT (no Boomkin · cap 126)</th><th class="good">BOOMKIN NIGHT (3/3 Imp FF confirmed · cap 79)</th></tr>
+    <tr><td>Belt</td><td>Girdle of the Deathdealer</td><td>GSG / Treachery if owned, else Deathdealer</td></tr>
+    <tr><td>Boots</td><td>Master's Treads <span class="mut small">(until hit-gemmed 2nd Swift-Kickers)</span></td><td>Ferocious Swift-Kickers (agi-gemmed)</td></tr>
+    <tr><td>Food</td><td>Spicy Hot Talbuk <span class="mut small">(122+20=142 ✓ capped)</span></td><td>Warp Burger / Grilled Mudfish (+20 agi)</td></tr>
+    <tr><td>Neck</td><td>Choker of Vile Intent</td><td>Choker fine · Jagged Bark if chasing max agi</td></tr>
+    <tr><td>Gem lever</td><td>Mantle Rigid Dawnstone stays</td><td>Rigid → Delicate only if this comp is permanent</td></tr>
+    <tr><td>Both nights</td><td colspan="2" class="mut">Kibler's Bits on pet · Haste Potion for burst windows · Adamantite Sharpening Stone on Mooncleaver · Devilsaur Tooth pre-pull swap · Hunter's Mark up · get in the shaman/Bloodlust party</td></tr>
+  </table>
+  <div class="small mut" style="margin-top:6px">Rule: assume PUG column unless the Boomkin is confirmed 3/3 Imp FF before first pull. If they die/leave, FF drops — pug column is always safe.</div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">📒 Hit ledger — where you stand at each gear era</h3>
+  <table>
+    <tr><th>Config</th><th>Hit</th><th>Notes (verified numbers only)</th></tr>
+    <tr><td><b>NOW</b> (paper-doll Jul 10)</td><td class="mono good">122</td><td class="mut">4 short of 126 pug cap · +43 over 79 Boomkin cap · Talbuk = 142 capped</td></tr>
+    <tr><td>+ Drape of Dark Reavers</td><td class="mono">137</td><td class="mut">+17 base −2 cloak bonus = +15 → capped WITHOUT food. Aran drop, SR#2</td></tr>
+    <tr><td>+ RoTM over Kaylaan's</td><td class="mono">131</td><td class="mut">+9 → also caps you foodless (either ring or cloak does it)</td></tr>
+    <tr><td>+ Edgewalker (hit-gemmed)</td><td class="mono">~130</td><td class="mut">24 vs Treads' 16 = +8. Agi-gemmed instead: −3 (still fine w/ food)</td></tr>
+    <tr><td class="warn">P2 full T5 transition</td><td class="mono warn">rebuild</td><td class="mut">Guide runs TWO sets: 6% (Boomkin, ~95 needed... 79 w/ your Draenei) and 9% (126). T5 pieces + Ranger-General/Lethality rings + Drape cover it. Recheck paper-doll after every tier swap.</td></tr>
+    <tr><td class="bad">P3 T5→T6 transition</td><td class="mono bad">big loss</td><td class="mut">Guide's explicit warning: dropping T5 sheds most of your hit. Recovery kit: Cursed Vision (has hit) + Halberd of Desolation (30 hit) + Insidious Bands + Boneweave Girdle + Edgewalker returns. Plan the swap, don't wing it.</td></tr>
+  </table>
+  <div class="small mut" style="margin-top:6px">Ledger uses only session-verified numbers. T5 piece-by-piece hit values get added when we're actually attuned and mathing real drops.</div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Live hit calculator <span class="pill">stats verified vs TBC DB · Jul 2</span></h3>
+  <div class="toggle-row">
+    <label class="tog"><input type="checkbox" id="boomkin"> Boomkin in raid (3/3 Imp Faerie Fire)</label>
+    <label class="tog"><input type="checkbox" id="talbuk"> Spicy Hot Talbuk food (+20 hit)</label>
+    <label class="tog" style="opacity:.7"><input type="checkbox" checked disabled> Glyph of Ferocity <span class="pill">equipped ✅ (+16 in base)</span></label>
+    <label class="tog"><input type="checkbox" id="hgems"> Handguards Glinting+bonus (+7) <span class="pill">confirm</span></label>
+  </div>
+  <div class="toggle-row small">
+    <span class="mut" style="align-self:center">Override with in-game paper doll (gear only, no food):</span>
+    <input type="number" id="override" placeholder="auto">
+  </div>
+
+  <h3>Upgrades — check as they drop</h3>
+  <table>
+    <tr><th></th><th>New item</th><th>Replaces</th><th>Hit swing</th></tr>
+    <tr><td><input class="chk up" type="checkbox" id="skulkers" disabled></td><td class="mut"><s>Skulker's Greaves</s> — legs slot filled by T4</td><td class="mut">redundant</td><td class="mono mut">n/a</td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="drape"></td><td><span class="epic">Drape of the Dark Reavers</span> <span class="mut small">Aran</span></td><td>Vengeance Wrap</td><td class="mono good">+15</td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="edge"></td><td><span class="epic">Edgewalker Longboots</span> <span class="mut small">Moroes · SR #1</span></td><td>Master's Treads</td><td class="mono good">+12 / <span class="bad">−3</span></td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="rotm"></td><td><span class="epic">Ring of a Thousand Marks</span> <span class="mut small">Prince</span></td><td>Kaylaan's Signet</td><td class="mono good">+9</td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="sunfury"></td><td><span class="epic">Sunfury Bow of the Phoenix</span> <span class="mut small">Prince</span></td><td>Wrathtide Longbow</td><td class="mono mut">0</td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="dst"></td><td><span class="epic">Dragonspine Trophy</span> <span class="mut small">Gruul · SR #1</span></td><td>Hourglass/Abacus</td><td class="mono mut">0</td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="gsg"></td><td><span class="epic">Gronn-Stitched Girdle</span> <span class="mut small">Gruul · SR #2</span></td><td>Girdle of the Deathdealer</td><td class="mono bad">−12</td></tr>
+    <tr><td><input class="chk up" type="checkbox" id="treachery"></td><td><span class="epic">Girdle of Treachery</span> <span class="mut small">Chess</span></td><td>Girdle of the Deathdealer</td><td class="mono bad">−12</td></tr>
+  </table>
+
+  <div class="gauge-wrap" id="gauge">
+    <div class="gauge-fill" id="fill"></div>
+    <div class="gauge-cap" id="cap79"><span>79 · Boomkin cap</span></div>
+    <div class="gauge-cap" id="cap126"><span>126 · your solo cap</span></div>
+    <div class="gauge-num" id="num">122</div>
+  </div>
+  <div id="verdict"></div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Where your hit lives</h3>
+  <table>
+    <tr><th>Item</th><th>Hit</th><th>Note</th></tr>
+    <tr><td>Girdle of the Deathdealer</td><td class="mono">20</td><td class="mut">Biggest hit piece — why belt upgrades are dangerous</td></tr>
+    <tr><td>Choker of Vile Intent</td><td class="mono">16</td><td class="mut">Never swapping</td></tr>
+    <tr><td>Master's Treads <span class="mut small">(hit boot)</span></td><td class="mono">16</td><td class="mut">Pug-night boot. Swift-Kickers (agi-gem) on capped nights = 0 hit here</td></tr>
+    <tr><td>Kaylaan's Signet</td><td class="mono">10</td><td class="mut">Replaced by RoTM</td></tr>
+    <tr><td>Slayer's Mark of the Redemption</td><td class="mono">10</td><td class="mut">Stays</td></tr>
+    <tr><td>BL Mantle — Rigid Dawnstone gem</td><td class="mono">8</td><td class="mut">Re-gem lever when over cap (→ Delicate +8 agi)</td></tr>
+    <tr><td>Vengeance Wrap — socket bonus</td><td class="mono">2</td><td class="mut">Delicate keeps it live</td></tr>
+    <tr><td>Glyph of Ferocity (BL Helm enchant)</td><td class="mono">16</td><td class="mut">Equipped ✅ — CE Revered</td></tr>
+    <tr><td>Demon Stalker Greaves (T4 legs)</td><td class="mono">15</td><td class="mut">Equipped Jul 10 — replaced BL Leggings (0 hit). 4pc intact.</td></tr>
+    <tr><td>Gems (Handguards R+B bonus, +hit gems)</td><td class="mono">9</td><td class="mut">From hit gems/socket bonuses</td></tr>
+    <tr><td class="mut">Everything else</td><td class="mono mut">0</td><td class="mut">Zero base hit</td></tr>
+    <tr><td><b>Confirmed paper-doll total</b></td><td class="mono"><b>122</b></td><td class="mut">vs 126 solo → <span class="warn">4 short</span> · vs 79 Boomkin → <span class="good">+43 over</span></td></tr>
+  </table>
+  <div class="rule small" style="margin-top:10px"><b>Baseline:</b> <b>122</b> with Demon Stalker Greaves equipped (Jul 10). Only <b>4 short</b> of pug cap (126) — any food/gem caps you; Spicy Hot Talbuk (+20) puts you OVER at 142. <b>+43 over</b> Boomkin cap (79) — go full agi on those nights. Confirm exact paper-doll next login.</div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">If your group has…</h3>
+  <table>
+    <tr><th>In raid</th><th>Cap</th><th>Loadout call</th></tr>
+    <tr><td><b>Balance Druid</b> (3/3 Imp FF)</td><td class="mono good">79</td><td>Already over. Food → Grilled Mudfish/Warp Burger. Belt upgrades free to wear. Permanently over → Mantle Rigid → Delicate. <span class="warn">Verify they talented Imp FF and keep FF up.</span></td></tr>
+    <tr><td><b>No Boomkin</b> (pug default)</td><td class="mono warn">126</td><td>Full hit set: Deathdealer + Treads (until Edgewalker) + Spicy Hot Talbuk. Every Kara hit drop is a priority.</td></tr>
+    <tr><td><b>Feral Druid</b> (LotP)</td><td class="mono mut">—</td><td>+5% crit party-wide — ask to be grouped with them. No gear change.</td></tr>
+    <tr><td><b>Draenei anyone</b></td><td class="mono mut">baked in</td><td>You ARE the Draenei. 142 never applies to you.</td></tr>
+    <tr><td><b>Draenei Shaman</b></td><td class="mono mut">—</td><td>Grace of Air / Windfury — party with them, no gear change. AotW doesn't stack with NR Totem (standing rule).</td></tr>
+    <tr><td><b>Warrior tank, no Lock/Ret</b></td><td class="mono mut">—</td><td>Pet call: bring Owl for Screech.</td></tr>
+  </table>
+  <div class="small mut" style="margin-top:8px">Pug reality: assume 126 unless the Boomkin is confirmed before first pull. If they die/leave, FF drops — 126 set is the safe default.</div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Cheap hit levers (no drops needed)</h3>
+  <table>
+    <tr><td>Glyph of Ferocity (head)</td><td class="mono mut">✅ in base</td><td class="mut">Equipped — CE Revered</td></tr>
+    <tr><td>Spicy Hot Talbuk</td><td class="mono good">+20</td><td class="mut">Your food until capped</td></tr>
+    <tr><td>Rigid Dawnstone (yellow)</td><td class="mono good">+8 ea</td><td class="mut">Mantle (filled); GSG yellow if it drops</td></tr>
+    <tr><td>Glinting Noble Topaz (R/Y)</td><td class="mono good">+4 ea</td><td class="mut">+4 agi rider, counts as red AND yellow for bonuses</td></tr>
+    <tr><td>Handguards: Glinting(R) + Shifting(B)</td><td class="mono good">+7</td><td class="mut">Gem + socket bonus — check current gems</td></tr>
+  </table>
+  <div class="small mut" style="margin-top:8px">Math: 15.77 rating = 1% at 70 · boss 9% → Draenei self-aura 8% (126) → +Imp FF 5% (79).</div>
+</div>
+</div>
+
+<!-- ═══════════════ SR & SWAP CHAINS ═══════════════ -->
+<div class="tabpanel" id="panel-sr">
+<div class="panel">
+  <h3 style="margin-top:0">SR priorities</h3>
+  <table>
+    <tr><th>Raid</th><th>Order</th></tr>
+    <tr><td>Gruul's Lair</td><td>#1 <b>Dragonspine Trophy</b> (if not HR'd — BiS trinket through P3) · #2 T4 legs ✔ done · fallback: T4 shoulder token (PvP redeem)</td></tr>
+    <tr><td>Karazhan</td><td>#1 Edgewalker Longboots (Moroes) · #2 Drape of Dark Reavers (Aran) · #3 Sunfury Bow (Prince) · #4 Ring of a Thousand Marks (Prince) · <span class="mut">(Skulker's redundant — T4 legs equipped)</span></td></tr>
+    <tr><td>Magtheridon</td><td>#1 <b>T4 chest token</b> (Chestguard of the Fallen Hero) — bank for SSC/TK 4pc-break era, don't wear over Cuirass yet · open-roll Mag's Head (Ring of Recalcitrant, bench till capped) · pass belts (hit loss)</td></tr>
+    <tr><td>SSC</td><td>#1 <b>Rift Stalker Gauntlets</b> (Leotheras — T5 4pc core) · #2 Rift Stalker Leggings token (Karathress — T5 core) · #3 Cobra-Lash Boots (Vashj) · #4 True-Aim Stalker Bands (Leotheras, wrist) · Tsunami Talisman (Leo) only if short-fight trinket wanted</td></tr>
+    <tr><td>TK (The Eye)</td><td>#1 <b>Rift Stalker Mantle</b> token (Void Reaver — T5 core) · #2 Rift Stalker Hauberk token + Leggings of Murderous Intent + Thalassian Wildercloak + Band of the Ranger-General (all Kael'thas) · #3 Vambraces of Ending (Solarian, wrist) · rings: Loop of Forged Power / Ring of Lethality (Al'ar)</td></tr>
+  </table>
+  <div class="small warn" style="margin-top:8px"><b>T5 rule:</b> you need ALL 4 Rift Stalker pieces (Helm=Vashj, Mantle=Void Reaver, Chest=Kael'thas, Gloves=Leotheras) before breaking the Beast Lord 4pc. Until then keep wearing Beast Lord — Rift Stalker pieces sit in your bags. The 4 core T5 tokens are the SR priority in both raids; everything else (boots, wrists, off-set legs, cloak, rings) is secondary. Legs BiS is actually the off-set <b>Leggings of Murderous Intent</b> (Kael'thas), with Rift Stalker Leggings as the token that completes 4pc if you go that route.
+</div>
+</div>
+<div class="panel">
+  <h3 style="margin-top:0">If X drops → do Y</h3>
+  <div class="rule"><b>Skulker's Greaves</b> → now redundant (T4 legs equipped, legs slot filled). Off-SR greed roll only, as a hit-flex spare. Don't spend an SR.</div>
+  <div class="rule green"><b>Drape of the Dark Reavers</b> → equip immediately (+15 net). Re-buy Enchant Cloak – Greater Agility for it.</div>
+  <div class="rule green"><b>Edgewalker Longboots</b> → equip immediately. Under cap: Rigid(Y) + Glinting(R) + 3 bonus = 24 hit, <b>+8 over Treads</b>. Boomkin nights: 2× Delicate. Unlocks your held Cat's Swiftness (8× LPS + 8× Primal Air ready).</div>
+  <div class="rule green"><b>Ring of a Thousand Marks</b> → +9 hit +23 crit over Kaylaan's. Kaylaan's to bags as the emergency +10 hit swap ring — don't vendor.</div>
+  <div class="rule"><b>Sunfury Bow / DST</b> → zero hit impact, equip on sight.</div>
+  <div class="rule red"><b>Gronn-Stitched Girdle / Girdle of Treachery</b> → do NOT auto-equip. Both −20 base vs Deathdealer, −12 best case with hit gem (Rigid in GSG's yellow / 2× Glinting in Treachery's reds). Wear only when the gauge shows ≥12 over the night's cap. <b>Deathdealer never leaves your bags.</b></div>
+  <div class="rule red"><b>Beastmaw Pauldrons</b> → bag decoration. Gemmed Mantle wins (settled Jun 13).</div>
+</div>
+<div class="panel">
+  <h3 style="margin-top:0">Standing upgrade paths</h3>
+  <table>
+    <tr><td>Wrist</td><td class="mut">Nightfall ✔ → Bands of Celestial Archer (TK trash BoE, watch AH) → Vambraces of Ending (Solarian) → True-Aim Stalker Bands (Leo)</td></tr>
+    <tr><td>Waist</td><td class="mut">Deathdealer ✔ → GSG (Gruul SR) → Girdle of Treachery — hit rule governs all of it</td></tr>
+    <tr><td>Boots</td><td class="mut">Master's Treads ✔ → Edgewalker → SSC/TK tier · heroic fallback: Shadowstep Striders (H.Arca) → Boots of Endless Hunt (H.Bot)</td></tr>
+  </table>
+</div>
+</div>
+
+<!-- ═══════════════ RAIDS ═══════════════ -->
+<div class="tabpanel" id="panel-raids">
+
+<div class="panel">
+  <h3 style="margin-top:0">🎒 Pre-raid restock — buy before you fly</h3>
+  <table>
+    <tr><th>Slot</th><th>Bring</th><th>Note</th></tr>
+    <tr><td>Flask / elixirs</td><td>Flask of Relentless Assault <span class="mut small">(120 AP, persists death)</span> OR Elixir of Major Agility + guardian elixir</td><td class="mut">Flask for progression/wipey nights; elixir combo cheaper for farm</td></tr>
+    <tr><td>Food</td><td>Spicy Hot Talbuk (pug) / Warp Burger or Grilled Mudfish (Boomkin)</td><td class="mut">Per loadout card — bring both stacks</td></tr>
+    <tr><td>Potion</td><td><b>Haste Potion</b> ×10+</td><td class="mut">Your best offensive pot — pop inside BW/Rapid Fire/trinket windows, not on CD. Fel Mana Potion if mana-starved on long fights</td></tr>
+    <tr><td>Weapon</td><td>Adamantite Sharpening Stone (Mooncleaver)</td><td class="mut">Sharpening = axes. Weightstone = blunt only (standing rule)</td></tr>
+    <tr><td>Pet</td><td>Kibler's Bits <span class="mut small">(30 str/30 stam, 1hr)</span> + Scroll of Agility V / Strength V on pet</td><td class="mut">Kibler's > Sporeling Snack (20/20, 30min). AH or Shattrath cooking daily recipe</td></tr>
+    <tr><td>Ammo</td><td>Ethereal Hollow Point arrows — FULL quiver + backup stack</td><td class="mut">Kizzie, Area 52. Running dry mid-raid = the classic hunter shame</td></tr>
+    <tr><td>Runes</td><td>Dark Rune / Demonic Rune</td><td class="mut">Mana for health, separate CD from potions — more casts before Viper aspect</td></tr>
+    <tr><td>Situational</td><td>Major Shadow Protection Potion (Prince, Mag) · Heavy Netherweave Bandages · Super Healing Potions</td><td class="mut">Shadow prot per boss card. First Aid is maxed — use it</td></tr>
+  </table>
+</div>
+
+
+<div class="panel">
+  <h3 style="margin-top:0">Per-boss hunter card — legend</h3>
+  <div class="small mut">Weave: <span class="good">FREE</span> = weave all fight · <span class="warn">WINDOW</span> = only in stated window · <span class="bad">NEVER</span> = ranged only. Viper = mana-bar target worth draining. Trinket: A=Abacus (burst/short) · H=Hourglass (long sustained).</div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Karazhan <span class="pill">Curator down — remaining below</span></h3>
+  <table>
+    <tr><th>Boss</th><th>Weave</th><th>Trinket</th><th>Viper</th><th>Your notes</th></tr>
+    <tr><td><b>Illhoof</b> <span class="mut small">(optional)</span></td><td class="good">FREE</td><td class="mono">H</td><td class="good">low-pri</td><td class="mut">Kil'rek dies first (Broken Pact). Kill Demonic Chains on Sacrifice. Girdle of the Prowler SR-era target.</td></tr>
+    <tr><td><b>Shade of Aran</b></td><td class="bad">NEVER</td><td class="mono">H</td><td class="good"><b>CRITICAL</b></td><td class="mut">Viper his mana HARD — 0-mana = no Pyroblast. STAND STILL in Flame Wreath (no jump/turn). Don't interrupt Arcane Missiles. Drape of Dark Reavers drops here (SR#2 tonight).</td></tr>
+    <tr><td><b>Netherspite</b></td><td class="bad">NEVER</td><td class="mono">H</td><td class="mut">no</td><td class="mut">Beam fight. Avoid Void Zones, hide back wall in Banish phase. Skulker's Greaves drops here.</td></tr>
+    <tr><td><b>Chess</b></td><td class="mut">—</td><td class="mut">—</td><td class="mut">no</td><td class="mut">Scripted, no gear/rotation. Raid "reset" before Prince. Kill Bishops → Queen → King. Girdle of Treachery drops here (bench belt).</td></tr>
+    <tr><td><b>Prince Malchezaar</b></td><td class="bad">NEVER</td><td class="mono">A</td><td class="mut">no</td><td class="mut">Back to wall, 30yd on Enfeeble, run out of Shadow Nova, avoid Infernals. Sunfury Bow + Ring of a Thousand Marks both here — roll hard, only hunter.</td></tr>
+    <tr><td class="warn"><b>Nightbane</b> <span class="mut small">(summon)</span></td><td class="warn">WINDOW</td><td class="mono">H</td><td class="mut">no</td><td class="warn">SSC FINAL STEP — loot Blazing Signet. Weave ground/flanks only, not air phase. Confirm urn-holder before committing.</td></tr>
+  </table>
+  <div class="rule small" style="margin-top:8px"><b>Already dead this ID:</b> Attumen (FREE/A · Scope schematic), Moroes (WINDOW/A · Edgewalker SR#1), Maiden (NEVER/A · Viper), Opera, Curator (WINDOW/A · Viper BEST — Abacus saved for Evocation).</div>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Gruul's Lair</h3>
+  <table>
+    <tr><th>Boss</th><th>Weave</th><th>Trinket</th><th>Viper</th><th>Notes</th></tr>
+    <tr><td><b>Maulgar</b></td><td class="warn">WINDOW</td><td class="mono">A</td><td class="good">yes</td><td class="mut">Viper Blindeye on pull → switch to Krosh/Kiggler. MD Blindeye to tank. Abacus for burst caster adds.</td></tr>
+    <tr><td><b>Gruul</b></td><td class="warn">WINDOW</td><td class="mono">H</td><td class="mut">no</td><td class="mut">Burn from start (Growth ~30s). Spread after every Ground Slam before Shatter. Weave between Shatters, watch pet. <b>SR: T4 legs token</b> (DST is HR'd).</td></tr>
+  </table>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">Magtheridon</h3>
+  <table>
+    <tr><th>Phase</th><th>Weave</th><th>Trinket</th><th>Viper</th><th>Notes</th></tr>
+    <tr><td><b>Hellfire Channelers</b></td><td class="mut">—</td><td class="mono">A</td><td class="good">yes</td><td class="mut">Shadow casters. Viper throughout, Abacus for burst. Interrupt Dark Mending.</td></tr>
+    <tr><td><b>Magtheridon</b></td><td class="good">FREE*</td><td class="mono">H</td><td class="mut">no</td><td class="mut">*FREE only if NOT on cube duty. Burst (BW+RF+trinket) inside cube banish = 300% dmg window. Stop ~35%, let Nova pass, push 30%. <b>SR: T4 chest token</b>, open-roll head.</td></tr>
+  </table>
+  <div class="rule small" style="margin-top:8px"><b>Cube rule:</b> wait for emote → click ONCE → don't move → hold to banish. Auto Shot OFF before your window. Wall safe-spot behind cube dodges Quake. Mind Exhaustion locks you out (run rotating teams).</div>
+</div>
+
+</div>
+
+<!-- ═══════════════ DUNGEONS ═══════════════ -->
+<div class="tabpanel" id="panel-dungeons">
+<div class="panel">
+  <table>
+    <tr><th>Run</th><th>Why</th></tr>
+    <tr><td><b>Karazhan (weekly)</b></td><td class="mut"><span class="warn">Nightbane personal loot = SSC unlock.</span> Plus SR list + Stabilized Eternium Scope schematic (BoP, Attumen).</td></tr>
+    <tr><td><b>Gruul's (weekly)</b></td><td class="mut">DST SR#1 forever · GSG SR#2 · attunement already banked</td></tr>
+    <tr><td>H.Arcatraz</td><td class="mut"><span class="good">Key ✅</span> — Shadowstep Striders (boots fallback). Also: Skyriss = Trial of Tenacity (keep Millhouse alive) for TK attunement Trials of the Naaru.</td></tr>
+    <tr><td>H.Botanica</td><td class="mut">Boots of Endless Hunt (fallback #2)</td></tr>
+    <tr><td>Coilfang heroics ×3 daily</td><td class="mut">BoJ income — no urgent badge target, passive stack (24 now)</td></tr>
+  </table>
+</div>
+</div>
+
+<!-- ═══════════════ TO-DO ═══════════════ -->
+<div class="tabpanel" id="panel-todo">
+<div class="panel">
+  <table>
+    <tr><td>☐ <b>SSC turn-in:</b> Cudgel of Kar'desh → Skar'this (H.Slave Pens)</td><td class="mut">Nightbane ✅ + Signet ✅ done — this turn-in = SSC attuned. Next Coilfang daily.</td></tr>
+    <tr><td>☐ Engineering 364 → 375 + Stabilized Eternium Scope</td><td class="mut">Schematic is BoP off Attumen</td></tr>
+    <tr><td>Hit baseline ✅ confirmed 122 (Jul 10)</td><td class="mut">4 from pug cap · +43 over Boomkin cap</td></tr>
+    <tr><td>☐ Cat's Swiftness enchant</td><td class="mut">HOLD until Edgewalker — mats banked (8× LPS, 8× Primal Air)</td></tr>
+    <tr><td>☐ Read hunter cast-timing Reddit post</td><td class="mut">Steady Shot macro delays on Anniversary servers</td></tr>
+    <tr><td class="mut">Horizon: TK Eye attunement (after SSC) · BlizzCon Sep 12 Classic+ watch · SP alt Transmute Master</td><td></td></tr>
+  </table>
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">🔨 Bank items — mindless gem/enchant checklist</h3>
+  <div class="small mut" style="margin-bottom:8px">Do these top-to-bottom, no thinking required. Most bank keepers are situational swaps that DON'T need work — those are marked "leave it."</div>
+  <table>
+    <tr><th>Item</th><th>Do this</th><th>Mats to buy</th></tr>
+    <tr><td><span class="rare">Cloak of the Craft</span></td><td class="good">Enchant → Greater Agility (+12 agi)</td><td class="mut">8× Greater Planar Essence, or buy the enchant off an enchanter. ~cheap. Makes it a real hit-bench cloak.</td></tr>
+    <tr><td>Gladiator's Pursuit <span class="mut small">(redeem T4 helm token first)</span></td><td class="good">Enchant → Glyph of the Gladiator (18 stam/20 resil) · Gem → Empowered Fire Opal (already have it) + a Delicate/resil gem</td><td class="mut">Redeem token at arena vendor. Glyph from CE Revered ✅. Fire Opal already banked.</td></tr>
+    <tr><td>Gladiator's Chain Spaulders <span class="mut small">(redeem T4 shoulder token, if you roll it)</span></td><td class="good">Enchant → Aldor shoulder inscription (you're Aldor) · Gem → resil/agi</td><td class="mut">Only if you win the shoulder token &amp; want the PvP set. Redeem at Isle of Quel'Danas.</td></tr>
+    <tr><td class="mut"><span class="rare">Jagged Bark Pendant</span></td><td class="mut">Leave it — necks have no enchant slot in TBC, no sockets. Just a bench swap.</td><td class="mut">nothing</td></tr>
+    <tr><td class="mut"><span class="rare">Stealther's Helmet</span></td><td class="mut">Leave it — emergency hit-helm only. Don't sink mats into a bench piece.</td><td class="mut">nothing</td></tr>
+    <tr><td class="mut"><span class="epic">Legacy</span> (2H)</td><td class="mut">Leave it — backup weapon, Mooncleaver is mainhand. Don't enchant.</td><td class="mut">nothing</td></tr>
+    <tr><td class="mut"><span class="epic">Beastmaw / Bladed Shoulderpads</span></td><td class="mut">Leave them — 4pc-break-era bench pieces. Gem/enchant only when you actually equip in SSC/TK.</td><td class="mut">nothing</td></tr>
+    <tr><td class="mut">Ferocious Swift-Kickers</td><td class="mut">Already handled — gem 2× Delicate (agi), see Feet panel. Enchant when Cat's Swiftness frees up.</td><td class="mut">2× Delicate Living Ruby</td></tr>
+  </table>
+  <div class="rule small" style="margin-top:8px"><b>The mindless summary:</b> only ONE bank item needs work right now — <b>Cloak of the Craft → Greater Agility</b>, so it's ready as a hit-bench cloak. Everything else either waits for a PvP-token redeem or is a bench piece you don't touch until you equip it. Don't waste gold gemming pieces you rarely wear.</div>
+</div>
+</div>
+
+<!-- ═══════════════ REP & BOJ ═══════════════ -->
+<div class="tabpanel" id="panel-rep">
+<div class="panel">
+  <table>
+    <tr><th>Faction</th><th>Last confirmed</th><th>Note</th></tr>
+    <tr><td>Sha'tar</td><td class="mono">Revered</td><td class="mut">Warpforged Key ✔</td></tr>
+    <tr><td>Keepers of Time</td><td class="mono">Revered</td><td class="mut">Key of Time ✔</td></tr>
+    <tr><td>Honor Hold</td><td class="mono">Revered</td><td class="mut">Flamewrought Key ✔</td></tr>
+    <tr><td>Aldor</td><td class="mono">Honored 5,195/12k</td><td class="mut">Greater Inscription of Vengeance at Exalted-track</td></tr>
+    <tr><td>Kurenai</td><td class="mono">Honored</td><td class="mut">Worg Hide Quiver ✔</td></tr>
+    <tr><td>Cenarion Expedition</td><td class="mono good">Revered ✅</td><td class="mut">Glyph of Ferocity ✅ equipped on BL Helm (+16 hit)</td></tr>
+  </table>
+  <div class="small mut" style="margin-top:8px">Rep rule: values shown are highest previously confirmed — update me in chat and I'll bump them. BoJ: <span class="mono">24</span>, passive accumulation, no urgent target.</div>
+</div>
+</div>
+
+<script>
+function switchTab(id){
+  const ids=['gear','hit','sr','raids','dungeons','todo','rep'];
+  ids.forEach((t,i)=>{
+    document.getElementById('panel-'+t).classList.toggle('active', t===id);
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t===id);
+  });
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<Dashboard />);
+/* ---- Hit Engine ---- */
+const els = id => document.getElementById(id);
+const BASE = 122; // Demon Stalker Greaves (T4 legs) equipped Jul 10 — 107 + 15 hit; 4pc intact via BL Helm/Mantle/Cuirass/Handguards
+const deltas = {skulkers:28, drape:15, rotm:9, sunfury:0, dst:0};
+function edgeDelta(overGen){ return overGen ? -3 : 12; }
+function beltOn(){ return els('gsg').checked || els('treachery').checked; }
+function calc(){
+  const boomkin = els('boomkin').checked;
+  const cap = boomkin ? 79 : 126;
+  const ov = parseInt(els('override').value,10);
+  const overBase = !isNaN(ov);
+  let gear = overBase ? ov : BASE;
+  if(!overBase){
+    if(els('hgems').checked) gear += 7;
+  }
+  for(const k in deltas) if(els(k).checked) gear += deltas[k];
+  if(els('edge').checked) gear += edgeDelta(boomkin && gear >= cap+15);
+  if(beltOn()) gear -= 12;
+  let total = gear + (els('talbuk').checked ? 20 : 0);
+  const max = 180;
+  els('fill').style.width = Math.min(100, total/max*100) + '%';
+  els('cap79').style.left = (79/max*100) + '%';
+  els('cap126').style.left = (126/max*100) + '%';
+  els('cap79').classList.toggle('inactive', !boomkin);
+  els('cap126').classList.toggle('inactive', boomkin);
+  els('num').textContent = total;
+  els('num').style.color = total >= cap ? 'var(--green)' : 'var(--amber)';
+  const diff = total - cap;
+  let v = '';
+  if(diff >= 0){
+    v = `<span class="good">✔ Capped for tonight's comp (${cap}) with ${diff} to spare.</span>`;
+    if(diff >= 12 && !beltOn()) v += ` <span class="mut">Belt upgrade (GSG / Treachery) safe to wear if owned.</span>`;
+    if(diff >= 8) v += ` <span class="mut">Consider Mantle Rigid → Delicate (+8 agi) if this comp is your norm.</span>`;
+    if(els('talbuk').checked && diff >= 20) v += ` <span class="mut">You'd stay capped on Grilled Mudfish — swap food for +20 agi.</span>`;
+  } else {
+    const short = -diff;
+    v = `<span class="bad">✘ ${short} hit short of ${cap}.</span> `;
+    const recs = [];
+    if(!els('talbuk').checked) recs.push('Spicy Hot Talbuk (+20)');
+    if(!els('drape').checked) recs.push('Drape of Dark Reavers (+15)');
+    if(!els('edge').checked) recs.push('Edgewalker gemmed for hit (+12)');
+    if(!els('rotm').checked) recs.push('Ring of a Thousand Marks (+9)');
+    if(beltOn()) recs.unshift('<b>put Deathdealer back on (+12)</b>');
+    v += `<span class="mut">Fastest routes: ${recs.slice(0,3).join(' · ')}</span>`;
+  }
+  els('verdict').innerHTML = v;
+}
+document.querySelectorAll('#panel-hit input').forEach(i => i.addEventListener('input', calc));
+calc();
 </script>
 </body>
 </html>
